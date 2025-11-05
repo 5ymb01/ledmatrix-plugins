@@ -357,7 +357,7 @@
         "live-scores"
       ],
       "repo": "https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard",
-      "branch": "main",
+      "branch": "master",
       "plugin_path": "",
       "versions": [
         {
