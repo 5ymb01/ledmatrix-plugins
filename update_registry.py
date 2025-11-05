@@ -107,91 +107,18 @@ def parse_version(version_str: str) -> tuple:
         return (0, 0, 0)
 
 
-def get_manifest_from_github(repo_url: str, branch: str = "master", github_token: Optional[str] = None) -> Optional[Dict]:
-    """
-    Fetch manifest.json directly from a GitHub repository's default branch.
-    This is the most reliable way to get the current version.
-    
-    Args:
-        repo_url: GitHub repository URL
-        branch: Branch name (default: master, will try main if master fails)
-        github_token: Optional GitHub token
-    
-    Returns:
-        Manifest data or None if not found
-    """
-    try:
-        # Convert repo URL to raw content URL
-        repo_url = repo_url.rstrip('/')
-        if repo_url.endswith('.git'):
-            repo_url = repo_url[:-4]
-        
-        parts = repo_url.split('/')
-        if len(parts) >= 2:
-            owner = parts[-2]
-            repo = parts[-1]
-            
-            # Try the specified branch first
-            branches_to_try = [branch]
-            if branch != "main":
-                branches_to_try.append("main")
-            if branch != "master":
-                branches_to_try.append("master")
-            
-            for try_branch in branches_to_try:
-                raw_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{try_branch}/manifest.json"
-                
-                headers = {}
-                if github_token:
-                    headers['Authorization'] = f'token {github_token}'
-                
-                try:
-                    response = requests.get(raw_url, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        manifest = response.json()
-                        return manifest
-                except requests.exceptions.RequestException:
-                    continue
-    except Exception as e:
-        pass  # Will fall back to releases/tags
-    
-    return None
-
-
-def get_latest_version_from_github(repo_url: str, branch: str = "master", github_token: Optional[str] = None) -> Optional[Dict]:
+def get_latest_version_from_github(repo_url: str, github_token: Optional[str] = None) -> Optional[Dict]:
     """
     Get the latest version information from GitHub.
-    Tries manifest.json first (most accurate), then falls back to releases/tags.
     
     Args:
         repo_url: GitHub repository URL
-        branch: Branch name (default: master)
         github_token: Optional GitHub token
     
     Returns:
         Dictionary with version info or None
     """
-    # First, try to get version from manifest.json (most reliable)
-    manifest = get_manifest_from_github(repo_url, branch, github_token)
-    if manifest:
-        version = manifest.get('version')
-        if version:
-            # Get release date from versions array if available
-            released_date = datetime.now().strftime('%Y-%m-%d')
-            if 'versions' in manifest and isinstance(manifest['versions'], list) and len(manifest['versions']) > 0:
-                latest_version_entry = manifest['versions'][0]
-                if isinstance(latest_version_entry, dict) and 'released' in latest_version_entry:
-                    released_date = latest_version_entry['released']
-            elif 'last_updated' in manifest:
-                released_date = manifest['last_updated']
-            
-            return {
-                'version': version,
-                'released': released_date,
-                'source': 'manifest'
-            }
-    
-    # Fallback: Try releases
+    # Try releases first
     releases = get_github_releases(repo_url, github_token)
     
     if releases:
@@ -208,11 +135,10 @@ def get_latest_version_from_github(repo_url: str, branch: str = "master", github
             return {
                 'version': version,
                 'released': published_date.strftime('%Y-%m-%d'),
-                'tag_name': latest['tag_name'],
-                'source': 'release'
+                'tag_name': latest['tag_name']
             }
     
-    # Fallback: Try tags if no releases
+    # Fallback to tags if no releases
     tags = get_github_tags(repo_url, github_token)
     
     if tags:
@@ -226,8 +152,7 @@ def get_latest_version_from_github(repo_url: str, branch: str = "master", github
             return {
                 'version': version,
                 'released': datetime.now().strftime('%Y-%m-%d'),  # Use current date as fallback
-                'tag_name': latest['name'],
-                'source': 'tag'
+                'tag_name': latest['name']
             }
     
     return None
@@ -257,66 +182,42 @@ def update_plugin_versions(registry_path: str = 'plugins.json', github_token: Op
         plugin_id = plugin['id']
         plugin_name = plugin['name']
         repo_url = plugin['repo']
-        branch = plugin.get('branch', 'master')
         current_latest = plugin.get('latest_version', 'unknown')
         
         print(f"Checking {plugin_name} ({plugin_id})...")
         print(f"  Current latest: {current_latest}")
         
-        # Get latest version from GitHub (tries manifest.json first, then releases/tags)
-        latest_info = get_latest_version_from_github(repo_url, branch, github_token)
+        # Get latest version from GitHub
+        latest_info = get_latest_version_from_github(repo_url, github_token)
         
         if not latest_info:
             print(f"  ⚠️  Could not fetch version info from GitHub")
             continue
         
         github_latest = latest_info['version']
-        source = latest_info.get('source', 'unknown')
-        print(f"  GitHub latest: {github_latest} (from {source})")
+        print(f"  GitHub latest: {github_latest}")
         
-        # Get manifest for additional metadata updates
-        manifest = get_manifest_from_github(repo_url, branch, github_token)
-        
-        # Compare versions (use version parsing to avoid downgrades)
+        # Compare versions - only update if GitHub version is newer
         current_version_tuple = parse_version(current_latest)
         github_version_tuple = parse_version(github_latest)
         
-        # Determine if we should update
-        should_update = False
-        update_reason = ""
-        
         if github_version_tuple > current_version_tuple:
-            should_update = True
-            update_reason = f"  ✨ Update available: {current_latest} → {github_latest}"
-        elif github_latest != current_latest:
-            # Same version string format but different - allow update
-            if github_version_tuple == current_version_tuple:
-                should_update = True
-                update_reason = f"  ✨ Update available (same version): {current_latest} → {github_latest}"
-            else:
-                # Potential downgrade - skip
-                print(f"  ⚠️  GitHub version {github_latest} appears older than current {current_latest}, skipping")
-                print()
-                continue
+            print(f"  ✨ Update available: {current_latest} → {github_latest}")
+        elif github_version_tuple < current_version_tuple:
+            print(f"  ⚠️  Registry has newer version ({current_latest}) than GitHub ({github_latest}). Skipping.")
+            continue
+        else:
+            print(f"  ✓ Already up to date")
+            continue
         
-        if should_update:
-            print(update_reason)
+        # Only proceed if GitHub version is actually newer
+        if github_latest != current_latest:
             
             if not dry_run:
                 # Check if this version already exists in the versions list
                 existing_versions = [v['version'] for v in plugin.get('versions', [])]
                 
                 if github_latest not in existing_versions:
-                    # Get ledmatrix_min from manifest or use existing default
-                    ledmatrix_min = '2.0.0'
-                    if manifest and 'versions' in manifest and isinstance(manifest['versions'], list) and len(manifest['versions']) > 0:
-                        latest_ver_entry = manifest['versions'][0]
-                        if isinstance(latest_ver_entry, dict):
-                            ledmatrix_min = latest_ver_entry.get('ledmatrix_min', 
-                                plugin.get('versions', [{}])[0].get('ledmatrix_min', '2.0.0'))
-                    elif plugin.get('versions'):
-                        ledmatrix_min = plugin['versions'][0].get('ledmatrix_min', '2.0.0')
-                    
                     # Add new version to the beginning of the versions list
                     # Get ledmatrix_min from existing versions or default
                     ledmatrix_min = '2.0.0'
@@ -339,42 +240,17 @@ def update_plugin_versions(registry_path: str = 'plugins.json', github_token: Op
                     new_version_entry = {
                         'version': github_latest,
                         'ledmatrix_min': ledmatrix_min,
-                        'released': latest_info['released']
+                        'released': latest_info['released'],
+                        'download_url': download_url
                     }
                     
-                    # Add download_url if we have a tag
-                    if 'tag_name' in latest_info:
-                        tag_name = latest_info['tag_name']
-                        new_version_entry['download_url'] = f"{repo_url}/archive/refs/tags/{tag_name}.zip"
-                    else:
-                        # Use template if available
-                        download_template = plugin.get('download_url_template')
-                        if download_template:
-                            new_version_entry['download_url'] = download_template.format(version=github_latest)
-                        else:
-                            # Construct from repo URL and version
-                            parts = repo_url.rstrip('/').split('/')
-                            owner = parts[-2]
-                            repo = parts[-1]
-                            new_version_entry['download_url'] = f"https://github.com/{owner}/{repo}/archive/refs/tags/v{github_latest}.zip"
-                    
-                    plugin.setdefault('versions', []).insert(0, new_version_entry)
-                    print(f"  ✅ Added version {github_latest} to versions list")
-                    if 'download_url' in new_version_entry:
-                        print(f"     Download URL: {new_version_entry['download_url']}")
+                    plugin['versions'].insert(0, new_version_entry)
                     print(f"  ✅ Added version {github_latest} to versions list")
                     print(f"     Download URL: {download_url}")
                 
                 # Update latest_version field
                 plugin['latest_version'] = github_latest
                 plugin['last_updated'] = latest_info['released']
-                
-                # Update description from manifest if available and more recent
-                if manifest and 'description' in manifest:
-                    manifest_desc = manifest['description']
-                    if manifest_desc and manifest_desc != plugin.get('description'):
-                        plugin['description'] = manifest_desc
-                        print(f"  ✅ Updated description from manifest")
                 
                 updates_made = True
         else:
