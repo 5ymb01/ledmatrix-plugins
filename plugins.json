@@ -73,7 +73,7 @@
     {
       "id": "weather",
       "name": "Weather Display",
-      "description": "Displays current weather, hourly, and daily forecasts from OpenWeatherMap",
+      "description": "Comprehensive weather display with current conditions, hourly forecast, daily forecast, UV index, wind direction, and weather icons. Features state caching, API counter tracking, and error handling. Powered by OpenWeatherMap API with beautiful weather icons.",
       "author": "ChuckBuilds",
       "category": "weather",
       "tags": [
@@ -86,8 +86,14 @@
       "branch": "master",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-weather/archive/refs/tags/v{version}.zip",
-      "latest_version": "2.0.8",
+      "latest_version": "2.0.9",
       "versions": [
+        {
+          "version": "2.0.9",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-11-05",
+          "download_url": "https://github.com/ChuckBuilds/ledmatrix-weather/archive/refs/tags/v2.0.9.zip"
+        },
         {
           "version": "2.0.8",
           "ledmatrix_min": "2.0.0",
@@ -161,7 +167,7 @@
       ],
       "stars": 0,
       "downloads": 0,
-      "last_updated": "2025-10-19",
+      "last_updated": "2025-11-05",
       "verified": true,
       "screenshot": ""
     },
@@ -361,6 +367,11 @@
       "plugin_path": "",
       "versions": [
         {
+          "version": "1.0.5",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-11-05"
+        },
+        {
           "version": "1.0.3",
           "ledmatrix_min": "2.0.0",
           "released": "2025-10-26"
@@ -384,10 +395,10 @@
       ],
       "stars": 0,
       "downloads": 0,
-      "last_updated": "2025-10-26",
+      "last_updated": "2025-11-05",
       "verified": true,
       "screenshot": "",
-      "latest_version": "1.0.3"
+      "latest_version": "1.0.5"
     },
     {
       "id": "football-scoreboard",
