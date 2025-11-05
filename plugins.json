@@ -188,6 +188,12 @@
       "plugin_path": "",
       "versions": [
         {
+          "version": "1.0.2",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-11-05",
+          "download_url": "https://github.com/ChuckBuilds/ledmatrix-static-image/archive/refs/tags/v1.0.2.zip"
+        },
+        {
           "version": "1.0.1",
           "ledmatrix_min": "2.0.0",
           "released": "2025-10-19",
@@ -202,10 +208,10 @@
       ],
       "stars": 0,
       "downloads": 0,
-      "last_updated": "2025-11-04",
+      "last_updated": "2025-11-05",
       "verified": true,
       "screenshot": "",
-      "latest_version": "1.0.1"
+      "latest_version": "1.0.2"
     },
     {
       "id": "text-display",
@@ -367,6 +373,12 @@
       "plugin_path": "",
       "versions": [
         {
+          "version": "1.0.6",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-11-06",
+          "download_url": "https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard/archive/refs/tags/v1.0.6.zip"
+        },
+        {
           "version": "1.0.5",
           "ledmatrix_min": "2.0.0",
           "released": "2025-11-05"
@@ -395,15 +407,15 @@
       ],
       "stars": 0,
       "downloads": 0,
-      "last_updated": "2025-11-05",
+      "last_updated": "2025-11-06",
       "verified": true,
       "screenshot": "",
-      "latest_version": "1.0.5"
+      "latest_version": "1.0.6"
     },
     {
       "id": "football-scoreboard",
       "name": "Football Scoreboard",
-      "description": "Live, recent, and upcoming football games across NFL and NCAA Football with real-time scores, game status, and team logos",
+      "description": "Standalone plugin for live, recent, and upcoming football games across NFL and NCAA Football with real-time scores, down/distance, possession, and game status. Now with organized nested config!",
       "author": "ChuckBuilds",
       "category": "sports",
       "tags": [
@@ -419,6 +431,12 @@
       "branch": "master",
       "plugin_path": "",
       "versions": [
+        {
+          "version": "2.0.7",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-11-05",
+          "download_url": "https://github.com/ChuckBuilds/ledmatrix-football-scoreboard/archive/refs/tags/v2.0.7.zip"
+        },
         {
           "version": "2.0.5",
           "ledmatrix_min": "2.0.0",
@@ -598,10 +616,10 @@
       ],
       "stars": 0,
       "downloads": 0,
-      "last_updated": "2025-10-26",
+      "last_updated": "2025-11-05",
       "verified": true,
       "screenshot": "",
-      "latest_version": "2.0.5",
+      "latest_version": "2.0.7",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-football-scoreboard/archive/refs/tags/v{version}.zip"
     },
     {
