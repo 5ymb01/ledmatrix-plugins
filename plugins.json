@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "last_updated": "2025-10-11T12:00:00Z",
+  "last_updated": "2025-11-05T12:00:00Z",
   "plugins": [
     {
       "id": "hello-world",
@@ -976,6 +976,40 @@
       "verified": true,
       "screenshot": "",
       "latest_version": "1.0.2"
+    },
+    {
+      "id": "ledmatrix-flights",
+      "name": "Flight Tracker",
+      "description": "Real-time aircraft tracking with ADS-B data, map backgrounds, flight plans, and proximity alerts",
+      "author": "ChuckBuilds",
+      "category": "custom",
+      "tags": [
+        "flight",
+        "aircraft",
+        "ads-b",
+        "skyaware",
+        "aviation",
+        "map",
+        "tracker"
+      ],
+      "repo": "https://github.com/ChuckBuilds/ledmatrix-flights",
+      "branch": "main",
+      "plugin_path": "",
+      "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-flights/archive/refs/tags/v{version}.zip",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-11-05",
+          "download_url": "https://github.com/ChuckBuilds/ledmatrix-flights/archive/refs/tags/v1.0.0.zip"
+        }
+      ],
+      "stars": 0,
+      "downloads": 0,
+      "last_updated": "2025-11-05",
+      "verified": true,
+      "screenshot": "",
+      "latest_version": "1.0.0"
     }
   ]
 }
