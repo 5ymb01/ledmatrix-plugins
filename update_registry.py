@@ -318,6 +318,24 @@ def update_plugin_versions(registry_path: str = 'plugins.json', github_token: Op
                         ledmatrix_min = plugin['versions'][0].get('ledmatrix_min', '2.0.0')
                     
                     # Add new version to the beginning of the versions list
+                    # Get ledmatrix_min from existing versions or default
+                    ledmatrix_min = '2.0.0'
+                    if plugin.get('versions'):
+                        ledmatrix_min = plugin['versions'][0].get('ledmatrix_min', '2.0.0')
+                    
+                    # Generate download_url
+                    download_url = None
+                    download_template = plugin.get('download_url_template')
+                    if download_template:
+                        # Use template if available
+                        download_url = download_template.format(version=github_latest)
+                    else:
+                        # Construct from repo URL and version
+                        parts = repo_url.rstrip('/').split('/')
+                        owner = parts[-2]
+                        repo = parts[-1]
+                        download_url = f"https://github.com/{owner}/{repo}/archive/refs/tags/v{github_latest}.zip"
+                    
                     new_version_entry = {
                         'version': github_latest,
                         'ledmatrix_min': ledmatrix_min,
@@ -333,9 +351,19 @@ def update_plugin_versions(registry_path: str = 'plugins.json', github_token: Op
                         download_template = plugin.get('download_url_template')
                         if download_template:
                             new_version_entry['download_url'] = download_template.format(version=github_latest)
+                        else:
+                            # Construct from repo URL and version
+                            parts = repo_url.rstrip('/').split('/')
+                            owner = parts[-2]
+                            repo = parts[-1]
+                            new_version_entry['download_url'] = f"https://github.com/{owner}/{repo}/archive/refs/tags/v{github_latest}.zip"
                     
                     plugin.setdefault('versions', []).insert(0, new_version_entry)
                     print(f"  ✅ Added version {github_latest} to versions list")
+                    if 'download_url' in new_version_entry:
+                        print(f"     Download URL: {new_version_entry['download_url']}")
+                    print(f"  ✅ Added version {github_latest} to versions list")
+                    print(f"     Download URL: {download_url}")
                 
                 # Update latest_version field
                 plugin['latest_version'] = github_latest
