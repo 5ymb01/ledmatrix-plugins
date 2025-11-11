@@ -1,14 +1,17 @@
 # LEDMatrix Official Plugins Registry
 
-🎉 **Complete Plugin Ecosystem** - Official plugin registry for [LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix).
+**Complete Plugin Ecosystem** - Official plugin registry for [LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix).
+The LEDMatrix project continues to evolve and has implemented a plugin system to give the end-user control over what features they want installed and to open the door to 3rd party developers to share their creations. 
 
-> **⚠️ IMPORTANT:** As of October 2025, all plugins have been migrated to **individual repositories** for better version management. See [PLUGIN_MIGRATION_NOTICE.md](PLUGIN_MIGRATION_NOTICE.md) for details.
+The below plugins are very much still "In Development" so please report any bugs or feature requests on the individual plugin pages.
 
-📖 See individual plugin repositories for detailed setup instructions and to contribute.
+Are you using my LEDMatrix Display or Plugins and want to say thanks? Help support my work on [https://ko-fi.com/chuckbuilds](https://ko-fi.com/chuckbuilds) . Thank you!
 
-## 🔥 Featured Plugins
+ See individual plugin repositories for detailed setup instructions and to contribute.
 
-### 🏆 Sports Suite (6 Plugins)
+## Featured Plugins creat
+
+### Sports Suite
 Multi-league scoreboards with live, recent, and upcoming games across all major sports.
 
 | Plugin | Description | Leagues | Category |
@@ -20,7 +23,7 @@ Multi-league scoreboards with live, recent, and upcoming games across all major 
 | **[Soccer Scoreboard](https://github.com/ChuckBuilds/ledmatrix-soccer-scoreboard)** | Global Soccer Leagues | Premier League, La Liga, Bundesliga, Serie A, Ligue 1, MLS | Sports |
 | **[Odds Ticker](https://github.com/ChuckBuilds/ledmatrix-odds-ticker)** | Betting Odds & Lines | NFL, NBA, MLB, NCAA | Sports |
 
-### 💰 Financial Suite (3 Plugins)
+### Financial Suite
 Complete stock market and financial information display.
 
 | Plugin | Description | Features | Category |
@@ -29,7 +32,7 @@ Complete stock market and financial information display.
 | **[Stock News](https://github.com/ChuckBuilds/ledmatrix-stock-news)** | Financial Headlines | Stock-specific news, RSS feeds | Financial |
 | **[Sports Leaderboard](https://github.com/ChuckBuilds/ledmatrix-leaderboard)** | League Standings | Rankings, records, conference standings | Sports |
 
-### 📱 Content & Utility (9 Plugins)
+### Content & Utility
 Essential displays for time, weather, media, and daily content.
 
 | Plugin | Description | Category |
@@ -43,6 +46,8 @@ Essential displays for time, weather, media, and daily content.
 | **[Google Calendar](https://github.com/ChuckBuilds/ledmatrix-calendar)** | Event calendar display | Time |
 | **[News Ticker](https://github.com/ChuckBuilds/ledmatrix-news)** | RSS news headlines | Content |
 | **[Hello World](https://github.com/ChuckBuilds/ledmatrix-hello-world)** | Plugin development example | Demo |
+| **[Flights](https://github.com/ChuckBuilds/ledmatrix-flights)** | ADSB Flight Map & Stats | Content |
+
 
 ## Installation
 
@@ -129,53 +134,27 @@ The script will automatically detect and use your token, giving you **5,000 requ
 - Environment variable: `$env:GITHUB_TOKEN = "your_token"`
 - Command line: `python update_registry.py --token your_token`
 
-### 🔄 Automated Registry Updates
-
-The plugin registry is automatically updated every 6 hours using GitHub Actions. The script checks each plugin's repository for new releases and updates `plugins.json` accordingly.
-
-You can also manually update the registry:
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Dry run to see what would be updated
-python update_registry.py --dry-run
-
-# Update the registry
-python update_registry.py
-
-# Use a GitHub token for higher API rate limits
-python update_registry.py --token YOUR_GITHUB_TOKEN
-```
-
-The automated workflow will:
-- ✅ Check for new releases on GitHub
-- ✅ Update version information in plugins.json
-- ✅ Automatically commit and push changes
-- ✅ Run every 6 hours or on-demand
-
 ## Key Features
 
-### 🎛️ **Plugin System Integration**
+### **Plugin System Integration**
 - All plugins inherit from `BasePlugin` for consistent behavior
 - Web UI integration for configuration and management
 - Font manager integration with customizable fonts per plugin
 - Background service integration for efficient data fetching
 
-### ⚙️ **Configuration Management**
+### **Configuration Management**
 - JSON schema validation for all plugin configurations
 - Per-plugin settings with sensible defaults
 - Web interface configuration through Plugin Settings tab
 - Environment variable support for sensitive settings
 
-### 📊 **Display Modes**
+### **Display Modes**
 - **Live**: Real-time game scores and data
 - **Recent**: Recently completed games and results
 - **Upcoming**: Scheduled games and events
 - **Ticker**: Continuous scrolling displays
 
-### 🔄 **Background Services**
+### **Background Services**
 - Non-blocking API calls for sports data, weather, stocks
 - Intelligent caching to minimize network requests
 - Configurable update intervals per plugin
@@ -208,4 +187,5 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 - Open an issue in this repository for plugin-related questions
 - Visit the main [LEDMatrix repository](https://github.com/ChuckBuilds/LEDMatrix) for general support
-- Check the [Wiki](https://github.com/ChuckBuilds/LEDMatrix/wiki) for documentation
+- Join us on Discord to message with me : [https://discord.gg/uW36dVAtcT](https://discord.gg/uW36dVAtcT)
+
