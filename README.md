@@ -45,6 +45,7 @@ Essential displays for time, weather, media, and daily content.
 | **[Music Player](https://github.com/ChuckBuilds/ledmatrix-music)** | Now playing with album art | Media |
 | **[Google Calendar](https://github.com/ChuckBuilds/ledmatrix-calendar)** | Event calendar display | Time |
 | **[News Ticker](https://github.com/ChuckBuilds/ledmatrix-news)** | RSS news headlines | Content |
+| **[Christmas Countdown](https://github.com/ChuckBuilds/ledmatrix-christmas-countdown)** | Festive Christmas countdown with tree | Holiday |
 | **[Hello World](https://github.com/ChuckBuilds/ledmatrix-hello-world)** | Plugin development example | Demo |
 | **[Flights](https://github.com/ChuckBuilds/ledmatrix-flights)** | ADSB Flight Map & Stats | Content |
 
@@ -94,6 +95,7 @@ cp -r ledmatrix-football-scoreboard /path/to/LEDMatrix/plugins/
 - **📱 Media** (2): Music players, images, video displays
 - **📝 Text** (1): Scrolling text, messages, announcements
 - **📖 Content** (2): Daily content, quotes, news feeds
+- **🎄 Holiday** (1): Seasonal and holiday displays
 - **🎮 Demo** (1): Example and test plugins
 
 ## Repository Structure
