@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "last_updated": "2025-01-20T12:00:00Z",
+  "last_updated": "2025-01-27T12:00:00Z",
   "plugins": [
     {
       "id": "hello-world",
@@ -1109,6 +1109,38 @@
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-12-04",
+      "verified": true,
+      "screenshot": "",
+      "latest_version": "1.0.0"
+    },
+    {
+      "id": "olympics-countdown",
+      "name": "Olympics Countdown",
+      "description": "Display a countdown to the next Olympics (summer or winter) with an Olympics logo. Automatically determines the next Olympics and counts down to the opening ceremony. Once the Olympics starts, switches to countdown to the closing ceremony. Supports Olympics through 2032.",
+      "author": "ChuckBuilds",
+      "category": "sports",
+      "tags": [
+        "olympics",
+        "countdown",
+        "sports",
+        "summer",
+        "winter"
+      ],
+      "repo": "https://github.com/ChuckBuilds/ledmatrix-olympics-countdown",
+      "branch": "main",
+      "plugin_path": "",
+      "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-olympics-countdown/archive/refs/tags/v{version}.zip",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "ledmatrix_min": "2.0.0",
+          "released": "2025-01-27",
+          "download_url": "https://github.com/ChuckBuilds/ledmatrix-olympics-countdown/archive/refs/tags/v1.0.0.zip"
+        }
+      ],
+      "stars": 0,
+      "downloads": 0,
+      "last_updated": "2025-01-27",
       "verified": true,
       "screenshot": "",
       "latest_version": "1.0.0"
