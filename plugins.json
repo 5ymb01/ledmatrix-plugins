@@ -16,19 +16,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-hello-world",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-09",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-hello-world/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -50,25 +37,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-clock-simple",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-14",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-clock-simple/archive/refs/tags/v1.0.4.zip"
-        },
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-09",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-clock-simple/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-14",
@@ -93,84 +61,6 @@
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-weather/archive/refs/tags/v{version}.zip",
       "latest_version": "2.0.9",
-      "versions": [
-        {
-          "version": "2.0.9",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-weather/archive/refs/tags/v2.0.9.zip"
-        },
-        {
-          "version": "2.0.8",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "2.0.7",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "2.0.6",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "2.0.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "2.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "2.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "2.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "2.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "2.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-17"
-        },
-        {
-          "version": "1.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-16"
-        },
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-14"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-14"
-        },
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-14"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-05",
@@ -192,26 +82,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-static-image",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-static-image/archive/refs/tags/v1.0.2.zip"
-        },
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-static-image/archive/refs/tags/v1.0.1.zip"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-static-image/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-05",
@@ -234,19 +104,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-text-display",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-text-display/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -269,19 +126,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-of-the-day",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-of-the-day/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -305,25 +149,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-music",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-music/archive/refs/tags/v1.0.3.zip"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-26"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-music/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-05",
@@ -350,14 +175,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-mqtt-notifications/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-01-20",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-mqtt-notifications/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-01-20",
@@ -380,19 +197,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-calendar",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-calendar/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -417,46 +221,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard",
       "branch": "master",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.7",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-06",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard/archive/refs/tags/v1.0.7.zip"
-        },
-        {
-          "version": "1.0.6",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-06",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard/archive/refs/tags/v1.0.6.zip"
-        },
-        {
-          "version": "1.0.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05"
-        },
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-26"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-11",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-06",
@@ -482,190 +246,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-football-scoreboard",
       "branch": "master",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "2.0.7",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-football-scoreboard/archive/refs/tags/v2.0.7.zip"
-        },
-        {
-          "version": "2.0.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-26"
-        },
-        {
-          "version": "2.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-21"
-        },
-        {
-          "version": "2.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-21"
-        },
-        {
-          "version": "2.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-21"
-        },
-        {
-          "version": "2.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-21"
-        },
-        {
-          "version": "1.6.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.5.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.5.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.5.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.4.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.4.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.3.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.2.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.2.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.2.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.9",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.8",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.7",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.6",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.1.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.1.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.1.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.10",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.9",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.8",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.7",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.6",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-football-scoreboard/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-05",
@@ -692,34 +272,6 @@
       "repo": "https://github.com/ChuckBuilds/ledmatrix-basketball-scoreboard",
       "branch": "main",
       "plugin_path": "",
-      "versions": [
-        {
-          "version": "1.0.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-26"
-        },
-        {
-          "version": "1.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-basketball-scoreboard/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-26",
@@ -747,29 +299,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-baseball-scoreboard/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.4",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-baseball-scoreboard/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-20",
@@ -800,29 +329,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-soccer-scoreboard/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-20"
-        },
-        {
-          "version": "1.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-soccer-scoreboard/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-20",
@@ -851,19 +357,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-odds-ticker/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-odds-ticker/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -892,31 +385,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-leaderboard/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.5",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-06",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-leaderboard/archive/refs/tags/v1.0.5.zip"
-        },
-        {
-          "version": "1.0.3",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-06",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-leaderboard/archive/refs/tags/v1.0.3.zip"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-leaderboard/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-06",
@@ -942,19 +410,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-news/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-news/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -982,19 +437,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-stock-news/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-stock-news/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-10-19",
@@ -1021,25 +463,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-stocks/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "2.0.1",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-stocks/archive/refs/tags/v2.0.1.zip"
-        },
-        {
-          "version": "1.0.2",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-19"
-        },
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-10-12",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-stocks/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-05",
@@ -1066,14 +489,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-flights/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-11-05",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-flights/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-11-05",
@@ -1098,14 +513,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-christmas-countdown/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-12-04",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-christmas-countdown/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-12-04",
@@ -1130,14 +537,6 @@
       "branch": "main",
       "plugin_path": "",
       "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-olympics-countdown/archive/refs/tags/v{version}.zip",
-      "versions": [
-        {
-          "version": "1.0.0",
-          "ledmatrix_min": "2.0.0",
-          "released": "2025-01-27",
-          "download_url": "https://github.com/ChuckBuilds/ledmatrix-olympics-countdown/archive/refs/tags/v1.0.0.zip"
-        }
-      ],
       "stars": 0,
       "downloads": 0,
       "last_updated": "2025-01-27",
