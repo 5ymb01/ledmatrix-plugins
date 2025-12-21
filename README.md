@@ -299,9 +299,75 @@ my-plugin/
 
 ### Getting Started
 
-1. Review the [Plugin Developer Guide](https://github.com/ChuckBuilds/LEDMatrix/wiki/Plugin-Development) for detailed documentation
-2. Check out the [Hello World plugin](https://github.com/ChuckBuilds/ledmatrix-hello-world) as a starter template
-3. See existing plugins in this registry for real-world examples
+1. **Review the documentation**:
+   - [Plugin Development Guide](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md) - Complete development workflow
+   - [Plugin API Reference](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_API_REFERENCE.md) - Complete API reference for Display Manager, Cache Manager, and Plugin Manager
+   - [Advanced Plugin Development](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/ADVANCED_PLUGIN_DEVELOPMENT.md) - Advanced patterns and examples
+   - [Plugin Architecture Spec](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_ARCHITECTURE_SPEC.md) - System architecture
+
+2. **Start with a template**:
+   - [Hello World plugin](https://github.com/ChuckBuilds/ledmatrix-hello-world) - Starter template with examples
+   - See existing plugins in this registry for real-world examples
+
+3. **Set up development environment**:
+   ```bash
+   # Link plugin for development
+   ./scripts/dev/dev_plugin_setup.sh link-github your-plugin
+   
+   # Test with emulator
+   python run.py --emulator
+   ```
+
+### Submission Guidelines
+
+To submit your plugin for inclusion in the official registry:
+
+1. **Ensure Quality**:
+   - Plugin works reliably on Raspberry Pi hardware
+   - Well-documented with comprehensive README.md
+   - Follows best practices from [Advanced Plugin Development](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/ADVANCED_PLUGIN_DEVELOPMENT.md)
+   - Includes `config_schema.json` for web UI configuration
+   - Proper error handling and logging
+
+2. **Create GitHub Repository**:
+   - Repository name: `ledmatrix-<plugin-name>`
+   - Public repository
+   - Proper README.md with installation and configuration instructions
+   - Semantic versioning in manifest.json
+
+3. **Submit for Review**:
+   - Open a GitHub issue in this repository ([ledmatrix-plugins](https://github.com/ChuckBuilds/ledmatrix-plugins))
+   - Or reach out on Discord: https://discord.gg/uW36dVAtcT
+   - Include:
+     - Repository URL
+     - Plugin description and use case
+     - Screenshots or video demonstration
+     - Why it would be useful to the community
+
+4. **Review Process**:
+   - Code review for quality and security
+   - Testing on Raspberry Pi hardware
+   - Documentation review
+   - If approved, added to official registry
+
+### Testing Requirements
+
+Before submitting, ensure your plugin:
+
+- ✅ Works on Raspberry Pi hardware (not just emulator)
+- ✅ Handles errors gracefully
+- ✅ Uses caching appropriately to avoid excessive API calls
+- ✅ Follows performance best practices
+- ✅ Includes comprehensive README.md
+- ✅ Has proper `config_schema.json` for web UI
+
+### Versioning
+
+- **Use semantic versioning**: `MAJOR.MINOR.PATCH` (e.g., `1.2.3`)
+- **Automatic version bumping**: Install the pre-push git hook for automatic patch version bumps
+- **GitHub as source of truth**: Plugin store fetches versions from GitHub releases/tags/manifest
+
+See the [LEDMatrix Git Workflow](https://github.com/ChuckBuilds/LEDMatrix/blob/main/.cursorrules) for version management details.
 
 ---
 
