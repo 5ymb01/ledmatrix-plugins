@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "last_updated": "2025-01-27T12:00:00Z",
+  "last_updated": "2025-12-28",
   "plugins": [
     {
       "id": "hello-world",
@@ -155,32 +155,6 @@
       "verified": true,
       "screenshot": "",
       "latest_version": "1.0.3"
-    },
-    {
-      "id": "mqtt-notifications",
-      "name": "MQTT Notifications",
-      "description": "Display text or images from HomeAssistant via MQTT. Supports doorbell, timer, and reminder notifications that interrupt the normal display rotation.",
-      "author": "ChuckBuilds",
-      "category": "integration",
-      "tags": [
-        "mqtt",
-        "homeassistant",
-        "doorbell",
-        "timer",
-        "reminder",
-        "notification",
-        "interrupt"
-      ],
-      "repo": "https://github.com/ChuckBuilds/ledmatrix-mqtt-notifications",
-      "branch": "main",
-      "plugin_path": "",
-      "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-mqtt-notifications/archive/refs/tags/v{version}.zip",
-      "stars": 0,
-      "downloads": 0,
-      "last_updated": "2025-01-20",
-      "verified": true,
-      "screenshot": "",
-      "latest_version": "1.0.0"
     },
     {
       "id": "calendar",
