@@ -1,0 +1,27 @@
+{
+  "id": "ledmatrix-flights",
+  "name": "Flight Tracker",
+  "version": "1.0.0",
+  "description": "Real-time aircraft tracking with ADS-B data, map backgrounds, flight plans, and proximity alerts",
+  "author": "ChuckBuilds",
+  "entry_point": "manager.py",
+  "class_name": "FlightTrackerPlugin",
+  "api_version": "1.0.0",
+  "display_modes": ["flight_tracker"],
+  "update_interval": 5,
+  "dependencies": [
+    "requests",
+    "pillow"
+  ],
+  "config_schema": "config_schema.json",
+  "requirements_file": "requirements.txt",
+  "tags": ["flight", "aircraft", "ads-b", "skyaware", "aviation", "map"],
+  "homepage": "https://github.com/ChuckBuilds/ledmatrix-flights",
+  "website": "https://github.com/ChuckBuilds/ledmatrix-flights",
+  "license": "MIT",
+  "compatible_versions": [">=2.0.0"],
+  "ledmatrix_version": "2.0.0",
+  "min_ledmatrix_version": "2.0.0",
+  "max_ledmatrix_version": "3.0.0"
+}
+

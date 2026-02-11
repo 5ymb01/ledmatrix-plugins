@@ -1,0 +1,212 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Clock Simple Plugin Configuration",
+  "description": "Configuration schema for the Clock Simple plugin - displays time and date on the LED matrix",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable or disable the clock plugin"
+    },
+    "display_duration": {
+      "type": "number",
+      "default": 15,
+      "minimum": 1,
+      "maximum": 300,
+      "description": "How long to display the clock in seconds"
+    },
+    "update_interval": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 60,
+      "description": "How often to update the clock display in seconds"
+    },
+    "timezone": {
+      "type": ["string", "null"],
+      "default": null,
+      "description": "Timezone for the clock display (e.g., 'America/New_York', 'Europe/London'). Use IANA timezone database names. If not specified or set to null, inherits from LEDMatrix global timezone setting."
+    },
+    "time_format": {
+      "type": "string",
+      "enum": ["12h", "24h"],
+      "default": "12h",
+      "description": "Time format: '12h' for 12-hour format with AM/PM, '24h' for 24-hour format"
+    },
+    "center_time_with_ampm": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, centers the time and AM/PM together as one block. When false (default), centers the time first, then adds AM/PM to the right."
+    },
+    "show_seconds": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show seconds in the time display"
+    },
+    "show_date": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show date below the time"
+    },
+    "date_format": {
+      "type": "string",
+      "enum": ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD", "OLD_CLOCK"],
+      "default": "OLD_CLOCK",
+      "description": "Date format to display. OLD_CLOCK matches the original clock layout with weekday and month/day with ordinal suffix (e.g., 'Monday, January 1st')"
+    },
+    "position_x": {
+      "type": "integer",
+      "default": 0,
+      "description": "X position offset for clock display (pixels)"
+    },
+    "position_y": {
+      "type": "integer",
+      "default": 0,
+      "description": "Y position offset for clock display (pixels)"
+    },
+    "customization": {
+      "type": "object",
+      "title": "Display Customization",
+      "description": "Customize fonts and colors for clock display elements",
+      "properties": {
+        "time_text": {
+          "type": "object",
+          "title": "Time Display",
+          "description": "Font settings for the time (hours:minutes:seconds)",
+          "properties": {
+            "font": {
+              "type": "string",
+              "title": "Font Family",
+              "description": "Select the font to use",
+              "enum": [
+                "PressStart2P-Regular.ttf",
+                "4x6-font.ttf",
+                "5by7.regular.ttf",
+                "5x7.bdf",
+                "4x6.bdf",
+                "cozette.bdf"
+              ],
+              "default": "PressStart2P-Regular.ttf"
+            },
+            "font_size": {
+              "type": "integer",
+              "title": "Font Size",
+              "description": "Font size in pixels",
+              "minimum": 4,
+              "maximum": 16,
+              "default": 8
+            },
+            "text_color": {
+              "type": "array",
+              "title": "Text Color",
+              "description": "Text color (RGB)",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "default": [255, 255, 255]
+            }
+          },
+          "x-propertyOrder": ["font", "font_size", "text_color"],
+          "additionalProperties": false
+        },
+        "date_text": {
+          "type": "object",
+          "title": "Date Display",
+          "description": "Font settings for the date",
+          "properties": {
+            "font": {
+              "type": "string",
+              "title": "Font Family",
+              "description": "Select the font to use",
+              "enum": [
+                "PressStart2P-Regular.ttf",
+                "4x6-font.ttf",
+                "5by7.regular.ttf",
+                "5x7.bdf",
+                "4x6.bdf",
+                "cozette.bdf"
+              ],
+              "default": "PressStart2P-Regular.ttf"
+            },
+            "font_size": {
+              "type": "integer",
+              "title": "Font Size",
+              "description": "Font size in pixels",
+              "minimum": 4,
+              "maximum": 16,
+              "default": 8
+            },
+            "text_color": {
+              "type": "array",
+              "title": "Text Color",
+              "description": "Text color (RGB)",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "default": [255, 128, 64]
+            }
+          },
+          "x-propertyOrder": ["font", "font_size", "text_color"],
+          "additionalProperties": false
+        },
+        "ampm_text": {
+          "type": "object",
+          "title": "AM/PM Indicator",
+          "description": "Font settings for AM/PM indicator (12-hour format only)",
+          "properties": {
+            "font": {
+              "type": "string",
+              "title": "Font Family",
+              "description": "Select the font to use",
+              "enum": [
+                "PressStart2P-Regular.ttf",
+                "4x6-font.ttf",
+                "5by7.regular.ttf",
+                "5x7.bdf",
+                "4x6.bdf",
+                "cozette.bdf"
+              ],
+              "default": "PressStart2P-Regular.ttf"
+            },
+            "font_size": {
+              "type": "integer",
+              "title": "Font Size",
+              "description": "Font size in pixels",
+              "minimum": 4,
+              "maximum": 16,
+              "default": 8
+            },
+            "text_color": {
+              "type": "array",
+              "title": "Text Color",
+              "description": "Text color (RGB)",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "default": [255, 255, 128]
+            }
+          },
+          "x-propertyOrder": ["font", "font_size", "text_color"],
+          "additionalProperties": false
+        }
+      },
+      "x-propertyOrder": ["time_text", "date_text", "ampm_text"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["enabled"],
+  "additionalProperties": false
+}

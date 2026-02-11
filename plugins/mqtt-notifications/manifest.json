@@ -1,0 +1,33 @@
+{
+  "id": "mqtt-notifications",
+  "name": "MQTT Notifications",
+  "version": "1.0.0",
+  "author": "ChuckBuilds",
+  "description": "Display text or images from HomeAssistant via MQTT. Supports dynamic MQTT topics with wildcard support for flexible notification handling that interrupts the normal display rotation.",
+  "category": "integration",
+  "tags": [
+    "mqtt",
+    "homeassistant",
+    "notification",
+    "interrupt",
+    "wildcard"
+  ],
+  "display_modes": [
+    "mqtt_notification"
+  ],
+  "entry_point": "manager.py",
+  "class_name": "MQTTNotificationsPlugin",
+  "download_url_template": "",
+  "versions": [
+    {
+      "released": "2025-01-20",
+      "version": "1.0.0",
+      "ledmatrix_min": "2.0.0"
+    }
+  ],
+  "last_updated": "2025-01-20",
+  "stars": 0,
+  "downloads": 0,
+  "verified": true,
+  "screenshot": ""
+}

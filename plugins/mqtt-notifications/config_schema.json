@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MQTT Notifications Plugin Configuration",
+  "description": "Configuration schema for the MQTT Notifications plugin - displays messages from HomeAssistant via MQTT",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable or disable the MQTT notifications plugin"
+    },
+    "display_duration": {
+      "type": "number",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 300,
+      "description": "Default display duration in seconds when not specified in message"
+    },
+    "update_interval": {
+      "type": "integer",
+      "default": 60,
+      "minimum": 1,
+      "description": "How often to check MQTT connection health in seconds"
+    },
+    "mqtt": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "default": "localhost",
+          "description": "MQTT broker hostname or IP address"
+        },
+        "port": {
+          "type": "integer",
+          "default": 1883,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "MQTT broker port"
+        },
+        "username": {
+          "type": "string",
+          "default": "",
+          "description": "MQTT broker username (optional)"
+        },
+        "password": {
+          "type": "string",
+          "default": "",
+          "description": "MQTT broker password (optional)"
+        },
+        "client_id": {
+          "type": "string",
+          "default": "ledmatrix-mqtt-notifications",
+          "description": "MQTT client ID"
+        },
+        "keepalive": {
+          "type": "integer",
+          "default": 60,
+          "minimum": 10,
+          "maximum": 300,
+          "description": "MQTT keepalive interval in seconds"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": ["homeassistant/ledmatrix/+"],
+          "description": "Array of MQTT topics to subscribe to. Supports wildcards: + (single level) and # (multi-level)"
+        }
+      },
+      "required": ["host", "port"],
+      "additionalProperties": false
+    },
+    "display": {
+      "type": "object",
+      "properties": {
+        "default_duration": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 300,
+          "description": "Default display duration in seconds when not specified in message"
+        }
+      },
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "object",
+      "properties": {
+        "font_path": {
+          "type": "string",
+          "default": "assets/fonts/PressStart2P-Regular.ttf",
+          "description": "Path to font file (TTF or BDF format). Relative to project root or absolute path."
+        },
+        "font_size": {
+          "type": "number",
+          "default": 8,
+          "minimum": 4,
+          "maximum": 32,
+          "description": "Font size in pixels"
+        },
+        "text_color": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "default": [255, 255, 255],
+          "description": "RGB text color [R, G, B]"
+        },
+        "background_color": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "default": [0, 0, 0],
+          "description": "RGB background color [R, G, B]"
+        },
+        "scroll": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable scrolling animation for text. If false, text is displayed statically."
+        },
+        "scroll_speed": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "maximum": 200,
+          "description": "Scroll speed in pixels per second. Higher values = faster scrolling."
+        },
+        "scroll_gap_width": {
+          "type": "number",
+          "default": 32,
+          "minimum": 0,
+          "description": "Gap width in pixels between scroll loops"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["enabled", "mqtt"],
+  "additionalProperties": false
+}

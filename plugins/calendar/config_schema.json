@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable or disable the calendar plugin"
+    },
+    "update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval in seconds"
+    },
+    "max_events": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of events to fetch and display"
+    },
+    "calendars": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "default": ["primary"],
+      "description": "List of calendar IDs to fetch events from (use 'primary' for default calendar)"
+    },
+    "credentials_file": {
+      "type": "string",
+      "default": "credentials.json",
+      "description": "Filename for Google Calendar API credentials (stored in plugin directory)",
+      "x-widget": "file-upload",
+      "x-upload-config": {
+        "plugin_id": "calendar",
+        "max_files": 1,
+        "max_size_mb": 1,
+        "allowed_types": ["application/json"],
+        "allowed_extensions": [".json"],
+        "upload_endpoint": "/api/v3/plugins/calendar/upload-credentials",
+        "target_filename": "credentials.json"
+      }
+    },
+    "token_file": {
+      "type": "string",
+      "default": "token.pickle",
+      "description": "Filename for OAuth token (stored in plugin directory)"
+    },
+    "show_all_day_events": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show all-day events"
+    },
+    "event_rotation_interval": {
+      "type": "number",
+      "default": 10,
+      "minimum": 5,
+      "description": "Seconds between rotating displayed events"
+    },
+    "display_duration": {
+      "type": "number",
+      "default": 30,
+      "minimum": 5,
+      "description": "Total display duration in seconds"
+    },
+    "customization": {
+      "type": "object",
+      "title": "Display Customization",
+      "description": "Customize fonts for calendar display elements",
+      "properties": {
+        "datetime_text": {
+          "type": "object",
+          "title": "Date/Time",
+          "description": "Font settings for event date and time",
+          "properties": {
+            "font": {
+              "type": "string",
+              "title": "Font Family",
+              "description": "Select the font to use",
+              "enum": [
+                "PressStart2P-Regular.ttf",
+                "4x6-font.ttf",
+                "5by7.regular.ttf",
+                "5x7.bdf",
+                "4x6.bdf",
+                "cozette.bdf"
+              ],
+              "default": "PressStart2P-Regular.ttf"
+            },
+            "font_size": {
+              "type": "integer",
+              "title": "Font Size",
+              "description": "Font size in pixels",
+              "minimum": 4,
+              "maximum": 16,
+              "default": 8
+            }
+          },
+          "x-propertyOrder": ["font", "font_size"],
+          "additionalProperties": false
+        },
+        "title_text": {
+          "type": "object",
+          "title": "Event Title",
+          "description": "Font settings for the event title/description",
+          "properties": {
+            "font": {
+              "type": "string",
+              "title": "Font Family",
+              "description": "Select the font to use",
+              "enum": [
+                "PressStart2P-Regular.ttf",
+                "4x6-font.ttf",
+                "5by7.regular.ttf",
+                "5x7.bdf",
+                "4x6.bdf",
+                "cozette.bdf"
+              ],
+              "default": "PressStart2P-Regular.ttf"
+            },
+            "font_size": {
+              "type": "integer",
+              "title": "Font Size",
+              "description": "Font size in pixels",
+              "minimum": 4,
+              "maximum": 16,
+              "default": 8
+            }
+          },
+          "x-propertyOrder": ["font", "font_size"],
+          "additionalProperties": false
+        }
+      },
+      "x-propertyOrder": ["datetime_text", "title_text"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["enabled", "credentials_file"]
+}
+

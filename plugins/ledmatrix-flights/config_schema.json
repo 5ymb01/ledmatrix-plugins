@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Flight Tracker Plugin Configuration",
+  "description": "Configuration schema for the flight tracker plugin with ADS-B data, map backgrounds, and flight plans",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "description": "Enable or disable the flight tracker plugin",
+      "default": false
+    },
+    "display_duration": {
+      "type": "number",
+      "description": "How long to show the flight tracker display (10-300 seconds)",
+      "minimum": 10,
+      "maximum": 300,
+      "default": 30
+    },
+    "update_interval": {
+      "type": "integer",
+      "description": "Interval in seconds between aircraft data updates from SkyAware",
+      "minimum": 1,
+      "maximum": 300,
+      "default": 5
+    },
+    "live_priority": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable live priority takeover when plugin has live content"
+    },
+    "skyaware_url": {
+      "type": "string",
+      "description": "URL to SkyAware aircraft.json endpoint",
+      "default": "http://192.168.86.30/skyaware/data/aircraft.json",
+      "pattern": "^https?://.*"
+    },
+    "center_latitude": {
+      "type": "number",
+      "description": "Center latitude for the map display",
+      "minimum": -90,
+      "maximum": 90,
+      "default": 27.9506
+    },
+    "center_longitude": {
+      "type": "number",
+      "description": "Center longitude for the map display",
+      "minimum": -180,
+      "maximum": 180,
+      "default": -82.4572
+    },
+    "map_radius_miles": {
+      "type": "number",
+      "description": "Radius in miles to display around center point",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 10
+    },
+    "zoom_factor": {
+      "type": "number",
+      "description": "Zoom factor to use more of the display (1.0 = normal, higher = more zoomed in)",
+      "minimum": 0.5,
+      "maximum": 5.0,
+      "default": 1.0
+    },
+    "show_trails": {
+      "type": "boolean",
+      "description": "Show aircraft movement trails",
+      "default": true
+    },
+    "trail_length": {
+      "type": "integer",
+      "description": "Number of trail points to display per aircraft",
+      "minimum": 0,
+      "maximum": 50,
+      "default": 10
+    },
+    "map_background": {
+      "type": "object",
+      "description": "Map background tile configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable map background tiles",
+          "default": true
+        },
+        "tile_provider": {
+          "type": "string",
+          "description": "Map tile provider",
+          "enum": ["osm", "carto", "carto_dark", "stamen", "esri"],
+          "default": "carto_dark"
+        },
+        "tile_size": {
+          "type": "integer",
+          "description": "Tile size in pixels",
+          "default": 256
+        },
+        "cache_ttl_hours": {
+          "type": "integer",
+          "description": "Tile cache time-to-live in hours",
+          "minimum": 1,
+          "maximum": 8760,
+          "default": 8760
+        },
+        "fade_intensity": {
+          "type": "number",
+          "description": "Fade intensity for map background (0.0-1.0)",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.4
+        },
+        "brightness": {
+          "type": "number",
+          "description": "Brightness adjustment for map (0.0-2.0)",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 1.0
+        },
+        "contrast": {
+          "type": "number",
+          "description": "Contrast adjustment for map (0.0-2.0)",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 1.0
+        },
+        "saturation": {
+          "type": "number",
+          "description": "Saturation adjustment for map (0.0-2.0)",
+          "minimum": 0.0,
+          "maximum": 2.0,
+          "default": 1.0
+        },
+        "disable_on_cache_error": {
+          "type": "boolean",
+          "description": "Disable map background if cache errors occur",
+          "default": false
+        },
+        "custom_tile_server": {
+          "type": "string",
+          "description": "Custom tile server URL (optional, for self-hosted OSM servers). When set, this overrides the tile_provider setting. Leave empty to use the tile_provider setting instead.",
+          "pattern": "^(https?://.*)?$",
+          "default": "https://maps.chuck-builds.com"
+        }
+      },
+      "required": ["enabled", "tile_provider"]
+    },
+    "proximity_alert": {
+      "type": "object",
+      "description": "Proximity alert configuration",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable proximity alerts",
+          "default": true
+        },
+        "distance_miles": {
+          "type": "number",
+          "description": "Distance threshold in miles for proximity alert",
+          "minimum": 0.01,
+          "maximum": 10.0,
+          "default": 0.1
+        },
+        "duration_seconds": {
+          "type": "integer",
+          "description": "Duration to show proximity alert in seconds",
+          "minimum": 5,
+          "maximum": 300,
+          "default": 30
+        }
+      },
+      "required": ["enabled"]
+    },
+    "flight_plan_enabled": {
+      "type": "boolean",
+      "description": "Enable flight plan fetching from FlightAware API",
+      "default": false
+    },
+    "max_api_calls_per_hour": {
+      "type": "integer",
+      "description": "Maximum FlightAware API calls per hour",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 25
+    },
+    "daily_api_budget": {
+      "type": "integer",
+      "description": "Maximum FlightAware API calls per day",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 60
+    },
+    "flight_plan_cache_ttl_hours": {
+      "type": "integer",
+      "description": "Flight plan cache time-to-live in hours",
+      "minimum": 1,
+      "maximum": 168,
+      "default": 12
+    },
+    "min_callsign_length": {
+      "type": "integer",
+      "description": "Minimum callsign length to fetch flight plan data",
+      "minimum": 3,
+      "maximum": 10,
+      "default": 4
+    },
+    "airline_callsign_prefixes": {
+      "type": "array",
+      "description": "List of airline callsign prefixes to prioritize for flight plan fetching",
+      "items": {
+        "type": "string"
+      },
+      "default": ["AAL", "UAL", "DAL", "SWA", "JBU", "ASQ", "ENY", "FFT", "NKS", "F9", "G4", "B6", "WN", "AA", "UA", "DL"]
+    },
+    "background_service": {
+      "type": "object",
+      "description": "Background service configuration for fetching flight plan data without blocking the display",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable the background service for flight plan fetching",
+          "default": true
+        },
+        "fetch_interval_hours": {
+          "type": "integer",
+          "description": "Interval in hours between background fetch runs",
+          "minimum": 1,
+          "maximum": 168,
+          "default": 4
+        },
+        "max_calls_per_run": {
+          "type": "integer",
+          "description": "Maximum number of flight plan calls fetched per background run",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10
+        }
+      },
+      "required": ["enabled"],
+      "additionalProperties": false
+    },
+    "use_offline_database": {
+      "type": "boolean",
+      "description": "Use offline aircraft database for aircraft type lookups",
+      "default": true
+    },
+    "offline_database_auto_update": {
+      "type": "boolean",
+      "description": "Automatically update offline database",
+      "default": true
+    },
+    "offline_database_update_interval_days": {
+      "type": "integer",
+      "description": "Interval in days between offline database updates",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 30
+    },
+    "display_mode": {
+      "type": "string",
+      "description": "Display mode to use",
+      "enum": ["map", "overhead", "stats", "auto"],
+      "default": "auto"
+    },
+    "flightaware_api_key": {
+      "type": "string",
+      "description": "FlightAware AeroAPI key (required if flight_plan_enabled is true). Get your free API key at https://flightaware.com/aeroapi/",
+      "x-secret": true,
+      "default": ""
+    }
+  },
+  "required": ["enabled"],
+  "additionalProperties": false
+}
+

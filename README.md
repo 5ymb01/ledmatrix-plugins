@@ -1,10 +1,10 @@
-# LEDMatrix Official Plugins Registry
+# LEDMatrix Official Plugins
 
-> Official plugin registry for [LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix) · [Installation](#-installation) · [Documentation](#-documentation) · [Support](#-support)
+> Official plugin repository for [LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix) &middot; [Installation](#-quick-install) &middot; [Documentation](#-for-maintainers) &middot; [Support](#-support--community)
 
 ---
 
-## 🚀 Quick Install
+## Quick Install
 
 **Web Interface (Recommended):**
 1. Open `http://your-pi-ip:5000`
@@ -20,72 +20,102 @@ curl -X POST http://your-pi-ip:5050/api/plugins/install \
 
 ---
 
-## 📦 Available Plugins
+## Available Plugins
 
-### 🏆 Sports (7)
+### Sports (8)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Football Scoreboard](https://github.com/ChuckBuilds/ledmatrix-football-scoreboard)** | NFL & NCAA Football | NFL, NCAA FB |
-| **[Hockey Scoreboard](https://github.com/ChuckBuilds/ledmatrix-hockey-scoreboard)** | NHL & NCAA Hockey | NHL, NCAA M/W |
-| **[Basketball Scoreboard](https://github.com/ChuckBuilds/ledmatrix-basketball-scoreboard)** | NBA & NCAA Basketball | NBA, NCAA M/W, WNBA |
-| **[Baseball Scoreboard](https://github.com/ChuckBuilds/ledmatrix-baseball-scoreboard)** | MLB & NCAA Baseball | MLB, MiLB, NCAA |
-| **[Soccer Scoreboard](https://github.com/ChuckBuilds/ledmatrix-soccer-scoreboard)** | Global Soccer Leagues | Premier League, La Liga, Bundesliga, Serie A, Ligue 1, MLS |
-| **[Odds Ticker](https://github.com/ChuckBuilds/ledmatrix-odds-ticker)** | Betting Odds & Lines | NFL, NBA, MLB, NCAA |
-| **[Sports Leaderboard](https://github.com/ChuckBuilds/ledmatrix-leaderboard)** | League Standings | Rankings, records, conference standings |
+| Plugin | Description |
+|--------|-------------|
+| [Football Scoreboard](./plugins/football-scoreboard/) | NFL & NCAA Football live scores, down/distance, possession |
+| [Hockey Scoreboard](./plugins/hockey-scoreboard/) | NHL & NCAA Hockey live scores and schedules |
+| [Basketball Scoreboard](./plugins/basketball-scoreboard/) | NBA, NCAA & WNBA live scores and schedules |
+| [Baseball Scoreboard](./plugins/baseball-scoreboard/) | MLB, MiLB & NCAA Baseball live scores |
+| [Soccer Scoreboard](./plugins/soccer-scoreboard/) | Premier League, La Liga, Bundesliga, Serie A, Ligue 1, MLS |
+| [Odds Ticker](./plugins/odds-ticker/) | Betting odds & lines across NFL, NBA, MLB, NCAA |
+| [Sports Leaderboard](./plugins/ledmatrix-leaderboard/) | League standings, rankings, conference records |
+| [Olympics Countdown](./plugins/olympics/) | Countdown to next Olympics with live medal counts |
 
-### 💰 Financial (2)
+### Financial (2)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Stocks Ticker](https://github.com/ChuckBuilds/ledmatrix-stocks)** | Stock & Crypto Prices | Real-time prices, charts, volume |
-| **[Stock News](https://github.com/ChuckBuilds/ledmatrix-stock-news)** | Financial Headlines | Stock-specific news, RSS feeds |
+| Plugin | Description |
+|--------|-------------|
+| [Stocks Ticker](./plugins/ledmatrix-stocks/) | Real-time stock & crypto prices with charts |
+| [Stock News](./plugins/stock-news/) | Financial headlines from RSS feeds |
 
-### ⏰ Time & Calendar (2)
+### Time & Calendar (3)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Simple Clock](https://github.com/ChuckBuilds/ledmatrix-clock-simple)** | Time and date display | Basic clock display |
-| **[Google Calendar](https://github.com/ChuckBuilds/ledmatrix-calendar)** | Event calendar display | Google Calendar integration |
+| Plugin | Description |
+|--------|-------------|
+| [Simple Clock](./plugins/clock-simple/) | Time and date display |
+| [7-Segment Clock](./plugins/7-segment-clock/) | Retro-style 7-segment clock with customizable colors |
+| [Google Calendar](./plugins/calendar/) | Upcoming events from Google Calendar |
 
-### 🌤️ Weather (1)
+### Weather (1)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Weather Display](https://github.com/ChuckBuilds/ledmatrix-weather)** | Weather forecasts and conditions | Current, hourly, daily forecasts |
+| Plugin | Description |
+|--------|-------------|
+| [Weather Display](./plugins/ledmatrix-weather/) | Current conditions, hourly & daily forecasts via OpenWeatherMap |
 
-### 📱 Media (2)
+### Media (2)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Music Player](https://github.com/ChuckBuilds/ledmatrix-music)** | Now playing with album art | Music player integration |
-| **[Static Image Display](https://github.com/ChuckBuilds/ledmatrix-static-image)** | Image slideshow with effects | Image display with transitions |
+| Plugin | Description |
+|--------|-------------|
+| [Music Player](./plugins/ledmatrix-music/) | Now playing with album art (Spotify & YouTube Music) |
+| [Static Image Display](./plugins/static-image/) | Image display with scaling and transparency |
 
-### 📝 Text & Content (4)
+### Content (2)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Scrolling Text Display](https://github.com/ChuckBuilds/ledmatrix-text-display)** | Custom text and messages | Custom text scrolling |
-| **[News Ticker](https://github.com/ChuckBuilds/ledmatrix-news)** | RSS news headlines | RSS feed integration |
-| **[Of The Day](https://github.com/ChuckBuilds/ledmatrix-of-the-day)** | Daily quotes and verses | Daily inspirational content |
-| **[Flights](https://github.com/ChuckBuilds/ledmatrix-flights)** | ADSB Flight Map & Stats | Flight tracking display |
+| Plugin | Description |
+|--------|-------------|
+| [News Ticker](./plugins/news/) | RSS news headlines from ESPN, NCAA, custom sources |
+| [Of The Day](./plugins/of-the-day/) | Daily quotes, Bible verses, word of the day |
 
-### 🎄 Holiday (1)
+### Integrations (1)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Christmas Countdown](https://github.com/ChuckBuilds/ledmatrix-christmas-countdown)** | Festive Christmas countdown with tree | Holiday countdown timer |
+| Plugin | Description |
+|--------|-------------|
+| [MQTT Notifications](./plugins/mqtt-notifications/) | HomeAssistant notifications via MQTT |
 
-### 🎮 Development (1)
+### Custom (2)
 
-| Plugin | Description | Details |
-|--------|-------------|---------|
-| **[Hello World](https://github.com/ChuckBuilds/ledmatrix-hello-world)** | Plugin development example | Template for plugin development |
+| Plugin | Description |
+|--------|-------------|
+| [Flight Tracker](./plugins/ledmatrix-flights/) | Real-time ADS-B aircraft tracking with map display |
+| [Countdown Display](./plugins/countdown/) | Customizable countdowns for birthdays, events, holidays |
+
+### Holiday (1)
+
+| Plugin | Description |
+|--------|-------------|
+| [Christmas Countdown](./plugins/christmas-countdown/) | Festive countdown with Christmas tree display |
+
+### Social (1)
+
+| Plugin | Description |
+|--------|-------------|
+| [YouTube Stats](./plugins/youtube-stats/) | Channel subscriber count, total views |
+
+### Text (1)
+
+| Plugin | Description |
+|--------|-------------|
+| [Scrolling Text](./plugins/text-display/) | Custom scrolling/static text with configurable fonts and colors |
+
+### System (1)
+
+| Plugin | Description |
+|--------|-------------|
+| [Web UI Info](./plugins/web-ui-info/) | Displays web UI URL for device access |
+
+### Development (1)
+
+| Plugin | Description |
+|--------|-------------|
+| [Hello World](./plugins/hello-world/) | Plugin development example and starter template |
 
 ---
 
-## 📖 Installation & Usage
-
+## Installation & Usage
 
 ### Plugin Store (Recommended)
 
@@ -97,20 +127,20 @@ The **Plugin Store** in the LEDMatrix web interface automatically fetches the la
 
 ### Manual Installation
 
-Clone plugin repositories directly:
+Clone this repository and copy the plugin you want:
 
 ```bash
-git clone https://github.com/ChuckBuilds/ledmatrix-football-scoreboard.git
-cp -r ledmatrix-football-scoreboard /path/to/LEDMatrix/plugins/
+git clone https://github.com/ChuckBuilds/ledmatrix-plugins.git
+cp -r ledmatrix-plugins/plugins/football-scoreboard /path/to/LEDMatrix/plugin-repos/
 ```
 
-> **Note:** See individual plugin repositories for detailed setup instructions and configuration.
+> **Note:** See individual plugin README files for detailed setup instructions and configuration.
 
 ---
 
-## 🔌 Installing 3rd Party Plugins
+## Installing 3rd Party Plugins
 
-LEDMatrix supports installing plugins from any GitHub repository, not just the official registry. This allows you to use community plugins or your own custom plugins.
+LEDMatrix supports installing plugins from any GitHub repository, not just this registry.
 
 ### Via Plugin Manager Tab
 
@@ -120,264 +150,108 @@ LEDMatrix supports installing plugins from any GitHub repository, not just the o
 
 ### Single Plugin Installation
 
-Install a plugin directly from its GitHub repository:
-
 1. Enter the GitHub repository URL (e.g., `https://github.com/user/ledmatrix-my-plugin`)
-2. Optionally specify a branch (defaults to `main` if not provided)
+2. Optionally specify a branch
 3. Click **Install**
-
-The plugin will be downloaded, installed, and automatically discovered by LEDMatrix.
 
 ### Registry/Monorepo Installation
 
-Browse and install plugins from registry-style repositories (like this one):
-
-1. Enter a registry repository URL (e.g., `https://github.com/user/ledmatrix-plugins`)
+1. Enter a registry repository URL (e.g., `https://github.com/user/their-plugins`)
 2. Click **Load Registry** to browse available plugins
-3. Click **Install** on any plugin you want
-4. Optionally **Save Repository** for automatic loading on future visits
-
-### Post-Installation
-
-After installation:
-- Plugin appears in the installed plugins list
-- Enable via toggle switch in Plugin Manager
-- Configure via Plugin Settings tab
-- May require restarting LEDMatrix service: `sudo systemctl restart ledmatrix`
+3. Click **Install** on any plugin
 
 ### Important Notes
 
-- **Custom Badge**: 3rd party plugins show a "Custom" badge to indicate they're not from the official registry
-- **Code Review**: Review plugin code before installing from untrusted sources
-- **Not Tracked**: Plugins installed via URL are not tracked in the official registry
-- **Updates**: Manual updates required unless you use a saved repository
+- 3rd party plugins show a **Custom** badge in the web UI
+- Review plugin code before installing from untrusted sources
+- Manual updates required unless the repository is saved
 
 ---
 
-## 🔧 For Maintainers
+## For Maintainers
 
-### Registry Structure
+### Repository Structure
 
-- `plugins.json` - Plugin metadata and download URLs
-- `update_registry.py` - Automated version checker
-- `config_secrets.template.json` - GitHub API token template
+```
+ledmatrix-plugins/
+  plugins.json           # Plugin registry (auto-updated from manifests)
+  update_registry.py     # Sync registry versions from local manifests
+  plugins/
+    football-scoreboard/ # Each plugin has its own directory
+      manifest.json
+      manager.py
+      config_schema.json
+      requirements.txt
+      README.md
+    hockey-scoreboard/
+    ...
+```
 
 ### Updating Plugin Versions
 
+After making changes to a plugin:
+
+1. Bump `version` in the plugin's `manifest.json`
+2. Run `python update_registry.py` to sync `plugins.json`
+3. Commit and push both changes
+
 ```bash
-python update_registry.py
+python update_registry.py           # Update plugins.json
+python update_registry.py --dry-run # Preview changes
 ```
 
-**GitHub API Token (Recommended):**
-
-Avoid rate limits (60 → 5,000 requests/hour):
-
-1. Copy template: `cp config_secrets.template.json config_secrets.json`
-2. Add token to `config_secrets.json`
-3. Get token: [Create token](https://github.com/settings/tokens/new) (no scopes needed)
-
-**Alternatives:**
-- Environment: `$env:GITHUB_TOKEN = "your_token"`
-- CLI: `python update_registry.py --token your_token`
-
 ---
 
-## 🎯 Key Features
-
-- **Plugin System**: All plugins inherit from `BasePlugin` for consistent behavior
-- **Configuration**: JSON schema validation, web UI config, environment variable support
-- **Display Modes**: Live, Recent, Upcoming, Ticker
-- **Background Services**: Non-blocking API calls, intelligent caching, retry logic
-- **Web Integration**: Full UI support for installation, configuration, and management
-
----
-
-## 📚 Documentation
-
-- **[Plugin Registry Setup Guide](docs/PLUGIN_REGISTRY_SETUP_GUIDE.md)** - Maintaining the registry
-- **[Plugin Store User Guide](docs/PLUGIN_STORE_USER_GUIDE.md)** - Using the plugin store
-- **[Plugin Store Implementation](docs/PLUGIN_STORE_IMPLEMENTATION_SUMMARY.md)** - Technical details
-- **[Quick Reference](docs/PLUGIN_STORE_QUICK_REFERENCE.md)** - Command reference
-
----
-
-## 🤝 Contributing
-
-### Submit a Plugin
-See [SUBMISSION.md](SUBMISSION.md) for guidelines and [VERIFICATION.md](VERIFICATION.md) for the review process.
-
-### Create a Plugin
-- **[Plugin Developer Guide](https://github.com/ChuckBuilds/LEDMatrix/wiki/Plugin-Development)** - Complete development guide
-- **[Hello World Plugin](https://github.com/ChuckBuilds/ledmatrix-hello-world)** - Starter template
-
----
-
-## 🛠️ 3rd Party Plugin Development
-
-Want to create your own plugin for LEDMatrix? Here's what you need to know for your plugin to be discovered and loaded by the system.
+## 3rd Party Plugin Development
 
 ### Required Files
 
 Your plugin repository must contain:
-
-- **`manifest.json`** - Plugin metadata and configuration (required)
-- **Entry point file** - Python file containing your plugin class (default: `manager.py`)
-- **Plugin class** - Must inherit from `BasePlugin` and implement required methods
+- **`manifest.json`** — Plugin metadata (required)
+- **Entry point file** — Python file with your plugin class (default: `manager.py`)
+- **Plugin class** — Must inherit from `BasePlugin` and implement `update()` and `display()`
 
 Optional but recommended:
-- `requirements.txt` - Python dependencies
-- `config_schema.json` - Configuration validation schema
-- `README.md` - Documentation for users
-
-### Plugin Discovery
-
-LEDMatrix automatically discovers plugins by:
-
-1. Scanning the `plugins/` directory for subdirectories
-2. Looking for `manifest.json` in each subdirectory
-3. Reading the manifest to get plugin metadata
-4. Loading plugins that are enabled in configuration
-
-**Directory naming:** The plugin directory name should match the `id` field in your manifest.json.
+- `requirements.txt` — Python dependencies
+- `config_schema.json` — Configuration validation schema (JSON Schema Draft-7)
+- `README.md` — User documentation
 
 ### Manifest Requirements
 
-Your `manifest.json` must include these required fields:
-
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | string | Unique plugin identifier (used as directory name) |
-| `name` | string | Human-readable plugin name |
-| `class_name` | string | Name of your plugin class (must match class in entry point) |
-| `compatible_versions` | array | LEDMatrix version compatibility (e.g., `[">=2.0.0"]`) |
+| `id` | string | Unique plugin identifier |
+| `name` | string | Human-readable name |
+| `class_name` | string | Plugin class name (must match class in entry point) |
+| `display_modes` | array | Display mode names |
 
-**Common optional fields:**
-- `version` - Plugin version (semver format)
-- `author` - Plugin author name
-- `description` - Brief description
-- `entry_point` - Entry point file (default: `manager.py`)
-- `display_modes` - Array of display mode names
-
-See the [manifest schema](https://github.com/ChuckBuilds/LEDMatrix/blob/main/schema/manifest_schema.json) for the complete field reference and validation rules.
-
-### Base Plugin Requirements
-
-Your plugin class must:
-
-1. **Inherit from `BasePlugin`**:
-   ```python
-   from src.plugin_system.base_plugin import BasePlugin
-   
-   class MyPlugin(BasePlugin):
-       pass
-   ```
-
-2. **Implement required methods**:
-   - `update()` - Fetch/update plugin data (called based on `update_interval`)
-   - `display(force_clear=False)` - Render plugin content to display
-
-3. **Match class name**: The class name must exactly match the `class_name` in your manifest.json
-
-### Repository Structure
-
-Recommended plugin repository structure:
-
-```
-my-plugin/
-├── manifest.json          # Plugin metadata (required)
-├── manager.py             # Plugin class (required)
-├── requirements.txt       # Python dependencies (optional)
-├── config_schema.json     # Config validation (optional)
-├── README.md              # Documentation (recommended)
-└── assets/                # Plugin assets (optional)
-    └── logos/
-```
-
-**Repository types:**
-- **Standalone plugin repo**: Repository contains a single plugin (manifest.json at root)
-- **Monorepo**: Repository contains multiple plugins (specify `plugin_path` during installation)
+See the [manifest schema](https://github.com/ChuckBuilds/LEDMatrix/blob/main/schema/manifest_schema.json) for complete field reference.
 
 ### Getting Started
 
-1. **Review the documentation**:
-   - [Plugin Development Guide](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md) - Complete development workflow
-   - [Plugin API Reference](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_API_REFERENCE.md) - Complete API reference for Display Manager, Cache Manager, and Plugin Manager
-   - [Advanced Plugin Development](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/ADVANCED_PLUGIN_DEVELOPMENT.md) - Advanced patterns and examples
-   - [Plugin Architecture Spec](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_ARCHITECTURE_SPEC.md) - System architecture
+1. Review the [Plugin Development Guide](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/PLUGIN_DEVELOPMENT_GUIDE.md)
+2. Start with the [Hello World plugin](./plugins/hello-world/) as a template
+3. Test with the emulator: `python run.py --emulator`
 
-2. **Start with a template**:
-   - [Hello World plugin](https://github.com/ChuckBuilds/ledmatrix-hello-world) - Starter template with examples
-   - See existing plugins in this registry for real-world examples
+### Submitting a Plugin
 
-3. **Set up development environment**:
-   ```bash
-   # Link plugin for development
-   ./scripts/dev/dev_plugin_setup.sh link-github your-plugin
-   
-   # Test with emulator
-   python run.py --emulator
-   ```
+To add your plugin to the official registry:
 
-### Submission Guidelines
+1. Open an issue on this repository or reach out on [Discord](https://discord.gg/uW36dVAtcT)
+2. Include: repository URL, description, screenshots/video
+3. After review, your plugin will be added to the registry
 
-To submit your plugin for inclusion in the official registry:
-
-1. **Ensure Quality**:
-   - Plugin works reliably on Raspberry Pi hardware
-   - Well-documented with comprehensive README.md
-   - Follows best practices from [Advanced Plugin Development](https://github.com/ChuckBuilds/LEDMatrix/blob/main/docs/ADVANCED_PLUGIN_DEVELOPMENT.md)
-   - Includes `config_schema.json` for web UI configuration
-   - Proper error handling and logging
-
-2. **Create GitHub Repository**:
-   - Repository name: `ledmatrix-<plugin-name>`
-   - Public repository
-   - Proper README.md with installation and configuration instructions
-   - Semantic versioning in manifest.json
-
-3. **Submit for Review**:
-   - Open a GitHub issue in this repository ([ledmatrix-plugins](https://github.com/ChuckBuilds/ledmatrix-plugins))
-   - Or reach out on Discord: https://discord.gg/uW36dVAtcT
-   - Include:
-     - Repository URL
-     - Plugin description and use case
-     - Screenshots or video demonstration
-     - Why it would be useful to the community
-
-4. **Review Process**:
-   - Code review for quality and security
-   - Testing on Raspberry Pi hardware
-   - Documentation review
-   - If approved, added to official registry
-
-### Testing Requirements
-
-Before submitting, ensure your plugin:
-
-- ✅ Works on Raspberry Pi hardware (not just emulator)
-- ✅ Handles errors gracefully
-- ✅ Uses caching appropriately to avoid excessive API calls
-- ✅ Follows performance best practices
-- ✅ Includes comprehensive README.md
-- ✅ Has proper `config_schema.json` for web UI
-
-### Versioning
-
-- **Use semantic versioning**: `MAJOR.MINOR.PATCH` (e.g., `1.2.3`)
-- **Automatic version bumping**: Install the pre-push git hook for automatic patch version bumps
-- **GitHub as source of truth**: Plugin store fetches versions from GitHub releases/tags/manifest
-
-See the [LEDMatrix Git Workflow](https://github.com/ChuckBuilds/LEDMatrix/blob/main/.cursorrules) for version management details.
+See [SUBMISSION.md](SUBMISSION.md) for full guidelines.
 
 ---
 
-## 📄 License
+## License
 
-GNU General Public License v3.0 - see [LICENSE](LICENSE) for details.
+GNU General Public License v3.0 — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 💬 Support & Community
+## Support & Community
 
 - **Discord**: [Join the community](https://discord.gg/uW36dVAtcT)
 - **Issues**: [Report plugin issues](https://github.com/ChuckBuilds/ledmatrix-plugins/issues)
@@ -394,4 +268,4 @@ GNU General Public License v3.0 - see [LICENSE](LICENSE) for details.
 
 ---
 
-> **Note**: Plugins are actively developed. Report bugs or feature requests on individual plugin repositories.
+> **Note**: Plugins are actively developed. Report bugs or feature requests on the [issues page](https://github.com/ChuckBuilds/ledmatrix-plugins/issues).
