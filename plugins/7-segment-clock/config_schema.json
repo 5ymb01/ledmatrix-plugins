@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "title": "Enable Plugin",
+      "description": "Enable or disable the 7-segment clock plugin"
+    },
+    "display_duration": {
+      "type": "number",
+      "default": 15,
+      "minimum": 5,
+      "maximum": 300,
+      "title": "Display Duration",
+      "description": "How long to display the clock (seconds)"
+    },
+    "location": {
+      "type": "object",
+      "title": "Location",
+      "description": "Location settings (optional - inherits from main LEDMatrix config if not specified)",
+      "properties": {
+        "timezone": {
+          "type": "string",
+          "title": "Timezone",
+          "description": "Timezone string (e.g., US/Eastern, UTC). If not specified, inherits from main LEDMatrix timezone setting."
+        }
+      }
+    },
+    "is_24_hour_format": {
+      "type": "boolean",
+      "default": true,
+      "title": "24 Hour Format",
+      "description": "Display time in 24-hour format (false for 12-hour format)"
+    },
+    "has_leading_zero": {
+      "type": "boolean",
+      "default": false,
+      "title": "Leading Zero",
+      "description": "Show leading zero for hours (e.g., 09:30 instead of 9:30)"
+    },
+    "has_flashing_separator": {
+      "type": "boolean",
+      "default": true,
+      "title": "Flashing Separator",
+      "description": "Enable blinking separator (colon) between hours and minutes"
+    },
+    "digit_spacing": {
+      "type": "number",
+      "default": 2,
+      "minimum": 0,
+      "maximum": 10,
+      "title": "Digit Spacing",
+      "description": "Number of pixels between digits (helps readability)"
+    },
+    "color": {
+      "type": "string",
+      "default": "#FFFFFF",
+      "title": "Color",
+      "description": "Hex color code for clock display (e.g., #FFFFFF for white, #FF0000 for red)"
+    }
+  }
+}
+

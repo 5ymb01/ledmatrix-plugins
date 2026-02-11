@@ -1,0 +1,619 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Baseball Scoreboard Plugin Configuration",
+  "description": "Configuration schema for the Baseball Scoreboard plugin",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable or disable the baseball scoreboard plugin"
+    },
+    "display_duration": {
+      "type": "number",
+      "default": 15,
+      "minimum": 5,
+      "maximum": 60,
+      "description": "Duration in seconds to display each game"
+    },
+    "show_records": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show team records (wins-losses)"
+    },
+    "show_ranking": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show team rankings (when available)"
+    },
+    "live_priority": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prioritize live games over scheduled games"
+    },
+    "live_game_duration": {
+      "type": "number",
+      "default": 30,
+      "minimum": 10,
+      "maximum": 120,
+      "description": "Duration in seconds to display live games"
+    },
+    "show_odds": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show betting odds for games"
+    },
+    "test_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable test mode for development"
+    },
+    "update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 30,
+      "maximum": 86400,
+      "description": "How often to fetch new data in seconds"
+    },
+    "live_update_interval": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 10,
+      "maximum": 300,
+      "description": "Update interval for live games (seconds)"
+    },
+    "live_odds_update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval for live odds (seconds)"
+    },
+    "odds_update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval for odds data (seconds)"
+    },
+    "recent_update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval for recent games (seconds)"
+    },
+    "upcoming_update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval for upcoming games (seconds)"
+    },
+    "show_favorite_teams_only": {
+      "type": "boolean",
+      "default": true,
+      "description": "Only show games from favorite teams"
+    },
+    "logo_dir": {
+      "type": "string",
+      "default": "assets/sports/mlb_logos",
+      "description": "Directory path for team logos"
+    },
+    "show_all_live": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show all live games, not just favorites"
+    },
+    "show_series_summary": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show series summary information"
+    },
+    "mlb_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable MLB games"
+    },
+    "mlb_favorite_teams": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2,3}$",
+        "description": "MLB team abbreviation (e.g., 'NYY', 'BOS')"
+      },
+      "uniqueItems": true,
+      "maxItems": 30,
+      "description": "List of favorite MLB teams to prioritize"
+    },
+    "mlb_display_modes_live": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show live MLB games"
+    },
+    "mlb_display_modes_recent": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show recently completed MLB games"
+    },
+    "mlb_display_modes_upcoming": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show upcoming MLB games"
+    },
+    "mlb_recent_games_to_show": {
+      "type": "integer",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "With favorites: N games per favorite team. Without favorites: N total games sorted by time."
+    },
+    "mlb_upcoming_games_to_show": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "With favorites: N games per favorite team. Without favorites: N total games sorted by time."
+    },
+    "mlb_background_service_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable background service for data fetching"
+    },
+    "mlb_background_service_max_workers": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of worker threads"
+    },
+    "mlb_background_service_request_timeout": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 5,
+      "maximum": 120,
+      "description": "Request timeout in seconds"
+    },
+    "mlb_background_service_max_retries": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of retries for failed requests"
+    },
+    "mlb_background_service_priority": {
+      "type": "integer",
+      "default": 2,
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Background service priority"
+    },
+    "milb_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable MiLB games"
+    },
+    "milb_live_priority": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prioritize live games over scheduled games"
+    },
+    "milb_live_game_duration": {
+      "type": "number",
+      "default": 30,
+      "minimum": 10,
+      "maximum": 120,
+      "description": "Duration in seconds to display live games"
+    },
+    "milb_test_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable test mode for development"
+    },
+    "milb_update_interval_seconds": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 30,
+      "maximum": 86400,
+      "description": "How often to fetch new data (seconds)"
+    },
+    "milb_live_update_interval": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 10,
+      "maximum": 300,
+      "description": "Update interval for live games (seconds)"
+    },
+    "milb_recent_update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval for recent games (seconds)"
+    },
+    "milb_upcoming_update_interval": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 60,
+      "maximum": 86400,
+      "description": "Update interval for upcoming games (seconds)"
+    },
+    "milb_recent_games_to_show": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "With favorites: N games per favorite team. Without favorites: N total games sorted by time."
+    },
+    "milb_upcoming_games_to_show": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "With favorites: N games per favorite team. Without favorites: N total games sorted by time."
+    },
+    "milb_favorite_teams": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2,4}$",
+        "description": "MiLB team abbreviation (e.g., 'DUR', 'SWB')"
+      },
+      "uniqueItems": true,
+      "maxItems": 120,
+      "description": "List of favorite MiLB teams to prioritize"
+    },
+    "milb_display_modes_live": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show live MiLB games"
+    },
+    "milb_display_modes_recent": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show recently completed MiLB games"
+    },
+    "milb_display_modes_upcoming": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show upcoming MiLB games"
+    },
+    "milb_logo_dir": {
+      "type": "string",
+      "default": "assets/sports/milb_logos",
+      "description": "Directory path for team logos"
+    },
+    "milb_show_records": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show team records (wins-losses)"
+    },
+    "milb_upcoming_fetch_days": {
+      "type": "integer",
+      "default": 7,
+      "minimum": 1,
+      "maximum": 30,
+      "description": "Number of days to fetch upcoming games"
+    },
+    "milb_background_service_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable background service for data fetching"
+    },
+    "milb_background_service_max_workers": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of worker threads"
+    },
+    "milb_background_service_request_timeout": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 5,
+      "maximum": 120,
+      "description": "Request timeout in seconds"
+    },
+    "milb_background_service_max_retries": {
+      "type": "integer",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Maximum number of retries for failed requests"
+    },
+    "milb_background_service_priority": {
+      "type": "integer",
+      "default": 2,
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Background service priority"
+    },
+    "ncaa_baseball_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable NCAA Baseball games"
+    },
+    "ncaa_baseball_live_priority": {
+      "type": "boolean",
+      "default": true,
+      "description": "Prioritize live games over scheduled games"
+    },
+    "ncaa_baseball_live_game_duration": {
+      "type": "number",
+      "default": 30,
+      "minimum": 10,
+      "maximum": 120,
+      "description": "Duration in seconds to display live games"
+    },
+    "ncaa_baseball_show_odds": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show betting odds for games"
+    },
+    "ncaa_baseball_test_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable test mode for development"
+    },
+    "ncaa_baseball_update_interval_seconds": {
+      "type": "integer",
+      "default": 3600,
+      "minimum": 30,
+      "maximum": 86400,
+      "description": "How often to fetch new data (seconds)"
+    },
+    "ncaa_baseball_live_update_interval": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 10,
+      "maximum": 300,
+      "description": "Update interval for live games (seconds)"
+    },
+    "ncaa_baseball_recent_games_to_show": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "With favorites: N games per favorite team. Without favorites: N total games sorted by time."
+    },
+    "ncaa_baseball_upcoming_games_to_show": {
+      "type": "integer",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 20,
+      "description": "With favorites: N games per favorite team. Without favorites: N total games sorted by time."
+    },
+    "ncaa_baseball_show_favorite_teams_only": {
+      "type": "boolean",
+      "default": true,
+      "description": "Only show games from favorite teams"
+    },
+    "ncaa_baseball_favorite_teams": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2,4}$",
+        "description": "NCAA Baseball team abbreviation (e.g., 'LSU', 'FLA')"
+      },
+      "uniqueItems": true,
+      "maxItems": 300,
+      "description": "List of favorite NCAA Baseball teams to prioritize"
+    },
+    "ncaa_baseball_display_modes_live": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show live NCAA Baseball games"
+    },
+    "ncaa_baseball_display_modes_recent": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show recently completed NCAA Baseball games"
+    },
+    "ncaa_baseball_display_modes_upcoming": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show upcoming NCAA Baseball games"
+    },
+    "ncaa_baseball_logo_dir": {
+      "type": "string",
+      "default": "assets/sports/ncaa_logos",
+      "description": "Directory path for team logos"
+    },
+    "ncaa_baseball_show_records": {
+      "type": "boolean",
+      "default": true,
+      "description": "Show team records (wins-losses)"
+    },
+    "ncaa_baseball_show_all_live": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show all live games, not just favorites"
+    },
+    "customization": {
+      "type": "object",
+      "title": "Display Customization",
+      "description": "Customize fonts, colors, and layout positioning for scoreboard elements",
+      "properties": {
+        "score_text": {
+          "type": "object",
+          "title": "Score Text",
+          "description": "Customize the score display",
+          "properties": {
+            "font": {
+              "type": "string",
+              "default": "press_start",
+              "description": "Font family for score text"
+            },
+            "font_size": {
+              "type": "integer",
+              "default": 10,
+              "description": "Font size for score text"
+            }
+          },
+          "additionalProperties": false
+        },
+        "status_text": {
+          "type": "object",
+          "title": "Status Text",
+          "description": "Customize the status/inning display",
+          "properties": {
+            "font": {
+              "type": "string",
+              "default": "press_start",
+              "description": "Font family for status text"
+            },
+            "font_size": {
+              "type": "integer",
+              "default": 8,
+              "description": "Font size for status text"
+            }
+          },
+          "additionalProperties": false
+        },
+        "detail_text": {
+          "type": "object",
+          "title": "Detail Text",
+          "description": "Customize detail text (records, etc.)",
+          "properties": {
+            "font": {
+              "type": "string",
+              "default": "four_by_six",
+              "description": "Font family for detail text"
+            },
+            "font_size": {
+              "type": "integer",
+              "default": 6,
+              "description": "Font size for detail text"
+            }
+          },
+          "additionalProperties": false
+        },
+        "layout": {
+          "type": "object",
+          "title": "Layout Positioning",
+          "description": "Adjust X,Y coordinate offsets for elements. Values are relative to default positions. Use negative values to move left/up, positive to move right/down.",
+          "properties": {
+            "home_logo": {
+              "type": "object",
+              "title": "Home Team Logo",
+              "properties": {
+                "x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Horizontal offset from default position (default: 0)"
+                },
+                "y_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Vertical offset from default position (default: 0)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "away_logo": {
+              "type": "object",
+              "title": "Away Team Logo",
+              "properties": {
+                "x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Horizontal offset from default position (default: 0)"
+                },
+                "y_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Vertical offset from default position (default: 0)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "score": {
+              "type": "object",
+              "title": "Game Score",
+              "properties": {
+                "x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Horizontal offset from center (default: 0)"
+                },
+                "y_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Vertical offset from center (default: 0)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "status": {
+              "type": "object",
+              "title": "Game Status/Inning",
+              "properties": {
+                "x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Horizontal offset from default position (default: 0)"
+                },
+                "y_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Vertical offset from default position (default: 0)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "record": {
+              "type": "object",
+              "title": "Team Records",
+              "properties": {
+                "x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Horizontal offset from default position (default: 0)"
+                },
+                "y_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Vertical offset from default position (default: 0)"
+                },
+                "away_x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Additional horizontal offset for away team record (default: 0)"
+                },
+                "home_x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Additional horizontal offset for home team record (default: 0)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "ranking": {
+              "type": "object",
+              "title": "Team Rankings",
+              "properties": {
+                "x_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Horizontal offset from default position (default: 0)"
+                },
+                "y_offset": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Vertical offset from default position (default: 0)"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "x-propertyOrder": ["home_logo", "away_logo", "score", "status", "record", "ranking"],
+          "additionalProperties": false
+        }
+      },
+      "x-propertyOrder": ["score_text", "status_text", "detail_text", "layout"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["enabled"]
+}

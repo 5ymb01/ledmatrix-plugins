@@ -1,0 +1,48 @@
+{
+  "id": "soccer-scoreboard",
+  "name": "Soccer Scoreboard",
+  "version": "1.1.0",
+  "author": "ChuckBuilds",
+  "description": "Live, recent, and upcoming soccer games across multiple leagues including Premier League, La Liga, Bundesliga, Serie A, Ligue 1, MLS, and more",
+  "category": "sports",
+  "tags": [
+    "soccer",
+    "football",
+    "premier-league",
+    "la-liga",
+    "bundesliga",
+    "serie-a",
+    "ligue-1",
+    "mls",
+    "sports",
+    "scoreboard",
+    "live-scores"
+  ],
+  "display_modes": [
+    "soccer_live",
+    "soccer_recent",
+    "soccer_upcoming"
+  ],
+  "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-soccer-scoreboard/archive/refs/tags/v{version}.zip",
+  "versions": [
+    {
+      "released": "2025-10-19",
+      "version": "1.0.1",
+      "ledmatrix_min": "2.0.0"
+    }
+  ],
+  "last_updated": "2025-10-19",
+  "stars": 0,
+  "downloads": 0,
+  "verified": true,
+  "screenshot": "",
+  "entry_point": "manager.py",
+  "class_name": "SoccerScoreboardPlugin",
+  "widgets": [
+    {
+      "name": "custom-leagues",
+      "script": "custom-leagues.js",
+      "description": "Custom soccer league editor with ESPN validation"
+    }
+  ]
+}

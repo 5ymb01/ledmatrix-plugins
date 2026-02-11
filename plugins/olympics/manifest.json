@@ -1,0 +1,54 @@
+{
+  "id": "olympics",
+  "name": "Olympics",
+  "version": "2.0.0",
+  "author": "ChuckBuilds",
+  "description": "Enhanced Olympics plugin with live medal counts, upcoming events, results, and countdown. Supports Vegas scroll mode and regular display mode.",
+  "category": "sports",
+  "tags": [
+    "olympics",
+    "medals",
+    "sports",
+    "winter",
+    "events",
+    "results",
+    "vegas"
+  ],
+  "entry_point": "manager.py",
+  "class_name": "OlympicsPlugin",
+  "config_schema": "config_schema.json",
+  "display_modes": [
+    "olympics"
+  ],
+  "vegas_mode": {
+    "supported": true,
+    "modes": ["scroll", "fixed", "static"],
+    "default_mode": "scroll",
+    "content_type": "multi"
+  },
+  "capabilities": {
+    "live_data": true,
+    "timezone_aware": true,
+    "sport_filters": true,
+    "country_tracking": true
+  },
+  "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-olympics-countdown/archive/refs/tags/v{version}.zip",
+  "versions": [
+    {
+      "released": "2026-02-08",
+      "version": "2.0.0",
+      "ledmatrix_min": "2.0.0",
+      "changelog": "Major update with live medals, events, results, and Vegas mode support"
+    },
+    {
+      "released": "2025-01-27",
+      "version": "1.0.0",
+      "ledmatrix_min": "2.0.0"
+    }
+  ],
+  "last_updated": "2026-02-08",
+  "stars": 0,
+  "downloads": 0,
+  "verified": true,
+  "screenshot": ""
+}

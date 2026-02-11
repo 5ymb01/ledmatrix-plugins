@@ -1,0 +1,27 @@
+{
+  "id": "countdown",
+  "name": "Countdown Display",
+  "version": "1.0.0",
+  "author": "Charles",
+  "description": "Create and manage customizable countdowns with images. Perfect for birthdays, holidays, events, and special occasions.",
+  "entry_point": "manager.py",
+  "class_name": "CountdownPlugin",
+  "category": "custom",
+  "tags": [
+    "countdown",
+    "timer",
+    "events",
+    "custom",
+    "images"
+  ],
+  "display_modes": [
+    "countdown"
+  ],
+  "compatible_versions": [">=2.0.0"],
+  "update_interval": 60,
+  "default_duration": 15,
+  "icon": "fa-clock",
+  "license": "MIT",
+  "homepage": "",
+  "config_schema": "config_schema.json"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "calendar",
+  "name": "Google Calendar",
+  "version": "1.0.1",
+  "author": "ChuckBuilds",
+  "description": "Display upcoming events from Google Calendar with date, time, and event details. Shows next 1-3 events with automatic rotation and timezone support.",
+  "category": "productivity",
+  "tags": [
+    "calendar",
+    "google",
+    "events",
+    "schedule",
+    "appointments"
+  ],
+  "entry_point": "manager.py",
+  "class_name": "CalendarPlugin",
+  "config_schema": "config_schema.json",
+  "display_modes": [
+    "calendar"
+  ],
+  "web_ui_actions": [
+    {
+      "id": "authenticate-google",
+      "type": "script",
+      "title": "Google Calendar Authentication",
+      "description": "Authenticate with Google Calendar to enable event display",
+      "button_text": "Authenticate Google Calendar",
+      "icon": "fab fa-google",
+      "color": "blue",
+      "script": "calendar_registration.py",
+      "success_message": "Google Calendar authentication completed successfully",
+      "error_message": "Google Calendar authentication failed"
+    }
+  ],
+  "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-calendar/archive/refs/tags/v{version}.zip",
+  "versions": [
+    {
+      "released": "2025-10-19",
+      "version": "1.0.1",
+      "ledmatrix_min": "2.0.0"
+    }
+  ],
+  "last_updated": "2025-10-19",
+  "stars": 0,
+  "downloads": 0,
+  "verified": true,
+  "screenshot": ""
+}

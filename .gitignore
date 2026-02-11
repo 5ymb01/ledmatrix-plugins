@@ -36,8 +36,5 @@ ehthumbs.db
 # Secrets (contains API tokens)
 config_secrets.json
 
-# Don't track plugin code (they're in individual repos now)
-plugins/*/
-
-# Keep the plugins README
-!plugins/README.md
+# Secrets (plugin-level)
+plugins/**/config_secrets.json

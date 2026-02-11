@@ -1,0 +1,33 @@
+{
+  "id": "text-display",
+  "name": "Text Display",
+  "version": "1.0.1",
+  "author": "ChuckBuilds",
+  "description": "Display custom scrolling or static text with configurable fonts, colors, and scroll speed. Perfect for announcements, messages, or custom displays.",
+  "category": "display",
+  "tags": [
+    "text",
+    "scroll",
+    "message",
+    "display",
+    "custom"
+  ],
+  "display_modes": [
+    "text_display"
+  ],
+  "entry_point": "manager.py",
+  "class_name": "TextDisplayPlugin",
+  "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-text-display/archive/refs/tags/v{version}.zip",
+  "versions": [
+    {
+      "released": "2025-10-19",
+      "version": "1.0.1",
+      "ledmatrix_min": "2.0.0"
+    }
+  ],
+  "last_updated": "2025-10-19",
+  "stars": 0,
+  "downloads": 0,
+  "verified": true,
+  "screenshot": ""
+}

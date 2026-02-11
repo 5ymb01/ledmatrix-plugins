@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Countdown Plugin Configuration",
+  "description": "Configuration schema for the Countdown plugin - create and manage multiple countdowns with custom images",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable or disable the countdown plugin"
+    },
+    "countdowns": {
+      "type": "array",
+      "title": "Countdowns",
+      "description": "Manage your countdown entries. Each countdown can have a custom image, name, and target date.",
+      "x-display": "table",
+      "items": {
+        "type": "object",
+        "title": "Countdown Entry",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "ID",
+            "description": "Unique identifier (auto-generated)",
+            "x-display": "hidden"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true,
+            "description": "Enable or disable this countdown"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name (e.g., 'Birthday', 'Vacation')",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "target_date": {
+            "type": "string",
+            "title": "Target Date",
+            "format": "date",
+            "description": "Date to count down to (YYYY-MM-DD)"
+          },
+          "image_path": {
+            "type": "string",
+            "title": "Image",
+            "description": "Upload an image for this countdown",
+            "x-widget": "file-upload-single",
+            "x-upload-config": {
+              "endpoint": "/api/v3/plugins/assets/upload",
+              "plugin_id": "countdown",
+              "allowed_types": ["image/png", "image/jpeg", "image/bmp", "image/gif"],
+              "max_size_mb": 5
+            }
+          },
+          "display_order": {
+            "type": "integer",
+            "title": "Order",
+            "default": 0,
+            "description": "Display order (lower = first)",
+            "minimum": 0
+          }
+        },
+        "required": ["name", "target_date"]
+      }
+    },
+    "font_family": {
+      "type": "string",
+      "enum": ["press_start", "four_by_six", "tom_thumb", "tiny", "picopixel"],
+      "default": "press_start",
+      "description": "Font family for countdown text"
+    },
+    "font_size": {
+      "type": "integer",
+      "minimum": 6,
+      "maximum": 16,
+      "default": 8,
+      "description": "Font size in pixels"
+    },
+    "font_color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "default": [255, 255, 255],
+      "description": "RGB color for countdown text [R, G, B]"
+    },
+    "name_font_size": {
+      "type": "integer",
+      "minimum": 6,
+      "maximum": 16,
+      "default": 8,
+      "description": "Font size for countdown name"
+    },
+    "name_font_color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "default": [200, 200, 200],
+      "description": "RGB color for countdown name [R, G, B]"
+    },
+    "fit_to_display": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically fit images to display dimensions"
+    },
+    "preserve_aspect_ratio": {
+      "type": "boolean",
+      "default": true,
+      "description": "Preserve image aspect ratio when scaling"
+    },
+    "background_color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "default": [0, 0, 0],
+      "description": "RGB background color [R, G, B]"
+    },
+    "display_duration": {
+      "type": "number",
+      "minimum": 5,
+      "maximum": 300,
+      "default": 15,
+      "description": "How long to display each countdown in seconds"
+    },
+    "show_expired": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show countdowns that have already passed"
+    }
+  },
+  "required": ["enabled"]
+}

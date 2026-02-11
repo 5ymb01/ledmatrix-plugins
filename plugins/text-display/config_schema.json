@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Text Display Plugin Configuration",
+  "description": "Configuration schema for the Text Display plugin - displays custom scrolling or static text messages",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable or disable the text display plugin"
+    },
+    "display_duration": {
+      "type": "number",
+      "default": 10,
+      "minimum": 1,
+      "maximum": 300,
+      "description": "How long to display the text in seconds (for non-scrolling or one complete scroll cycle)"
+    },
+    "update_interval": {
+      "type": "integer",
+      "default": 60,
+      "minimum": 1,
+      "description": "How often to refresh the text display in seconds"
+    },
+    "text": {
+      "type": "string",
+      "default": "Subscribe to ChuckBuilds",
+      "description": "The text message to display on the LED matrix"
+    },
+    "font_path": {
+      "type": "string",
+      "default": "assets/fonts/PressStart2P-Regular.ttf",
+      "description": "Path to font file (TTF or BDF format). Relative to project root or absolute path."
+    },
+    "font_size": {
+      "type": "number",
+      "default": 8,
+      "minimum": 4,
+      "maximum": 32,
+      "description": "Font size in pixels"
+    },
+    "scroll": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable scrolling animation for text. If false, text is displayed statically."
+    },
+    "scroll_speed": {
+      "type": "number",
+      "default": 1,
+      "minimum": 0.1,
+      "maximum": 10,
+      "description": "Scroll speed in pixels per frame. Higher values = faster scrolling. Typical range: 1-2 pixels/frame for smooth scrolling. Works with scroll_delay to control actual speed."
+    },
+    "scroll_delay": {
+      "type": "number",
+      "default": 0.01,
+      "minimum": 0.001,
+      "maximum": 0.1,
+      "description": "Delay in seconds per frame. Lower values = higher FPS = smoother scrolling. Default 0.01 = 100 FPS. For 120 FPS use 0.0083, for 240 FPS use 0.0042."
+    },
+    "target_fps": {
+      "type": "number",
+      "default": 120,
+      "minimum": 30,
+      "maximum": 240,
+      "description": "Target frames per second for scrolling. Higher FPS = smoother scrolling. Recommended: 120-240 for smooth scrolling. Lower values may cause pixel skipping."
+    },
+    "scroll_loop": {
+      "type": "boolean",
+      "default": true,
+      "description": "If true, text loops continuously. If false, scrolls once and stops (one-shot mode)."
+    },
+    "scroll_gap_width": {
+      "type": "number",
+      "default": 32,
+      "minimum": 0,
+      "description": "Gap width in pixels between scroll loops (space between end and start of text when looping)"
+    },
+    "text_color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "default": [
+        255,
+        255,
+        255
+      ],
+      "description": "RGB text color [R, G, B]"
+    },
+    "background_color": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "default": [
+        0,
+        0,
+        0
+      ],
+      "description": "RGB background color [R, G, B]"
+    }
+  },
+  "required": [
+    "enabled",
+    "text"
+  ],
+  "additionalProperties": false
+}

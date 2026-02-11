@@ -1,0 +1,34 @@
+{
+  "id": "hello-world",
+  "name": "Hello World",
+  "version": "1.0.2",
+  "author": "ChuckBuilds",
+  "description": "A simple test plugin that displays a customizable message",
+  "entry_point": "manager.py",
+  "class_name": "HelloWorld Plugin",
+  "category": "demo",
+  "tags": [
+    "demo",
+    "test",
+    "simple"
+  ],
+  "display_modes": [
+    "hello-world"
+  ],
+  "download_url_template": "https://github.com/ChuckBuilds/ledmatrix-hello-world/archive/refs/tags/v{version}.zip",
+  "versions": [
+    {
+      "released": "2025-10-19",
+      "version": "1.0.1",
+      "ledmatrix_min": "2.0.0"
+    }
+  ],
+  "last_updated": "2025-10-19",
+  "stars": 0,
+  "downloads": 0,
+  "verified": true,
+  "screenshot": "",
+  "config_schema": "config_schema.json",
+   "compatible_versions": [">=2.0.0"],
+}
+
