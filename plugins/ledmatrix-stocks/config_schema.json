@@ -82,7 +82,7 @@
           "description": "List of stock symbols to track",
           "items": {
             "type": "string",
-            "pattern": "^[A-Z]{1,5}$"
+            "pattern": "^\\^?[A-Z]{1,5}$"
           },
           "default": ["ASTS", "SCHD", "INTC", "NVDA", "T", "VOO", "SMCI"],
           "maxItems": 20
