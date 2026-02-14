@@ -2,13 +2,15 @@
 Game Card Renderer for Baseball Scoreboard Plugin
 
 Renders individual baseball game cards as PIL Images for use in scroll mode.
-Adapted from scorebug_renderer.py but returns images instead of updating display directly.
+Returns images instead of updating display directly.
 """
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
+import pytz
 from PIL import Image, ImageDraw, ImageFont
 
 # Pillow compatibility: Image.Resampling.LANCZOS is available in Pillow >= 9.1
@@ -48,6 +50,9 @@ class GameRenderer:
         # Use provided logo cache or create new one
         self._logo_cache = logo_cache if logo_cache is not None else {}
 
+        # Rankings cache (populated externally via set_rankings_cache)
+        self._team_rankings_cache: Dict[str, int] = {}
+
         # Load fonts
         self.fonts = self._load_fonts()
 
@@ -72,8 +77,14 @@ class GameRenderer:
             fonts['rank'] = ImageFont.load_default()
         return fonts
 
-    def _get_logo_path(self, league: str, team_abbrev: str) -> Path:
-        """Get the logo path for a team based on league."""
+    def _get_logo_path(self, league: str, team_abbrev: str, game: Dict = None) -> Path:
+        """Get the logo path for a team based on league config."""
+        # Use league_config logo_dir if available
+        if game and game.get('league_config'):
+            logo_dir = game['league_config'].get('logo_dir')
+            if logo_dir:
+                return Path(logo_dir) / f"{team_abbrev}.png"
+        # Fallback to defaults
         if league == 'mlb':
             return Path("assets/sports/mlb_logos") / f"{team_abbrev}.png"
         elif league == 'milb':
@@ -83,13 +94,13 @@ class GameRenderer:
         else:
             return Path("assets/sports/mlb_logos") / f"{team_abbrev}.png"
 
-    def _load_and_resize_logo(self, league: str, team_abbrev: str) -> Optional[Image.Image]:
+    def _load_and_resize_logo(self, league: str, team_abbrev: str, game: Dict = None) -> Optional[Image.Image]:
         """Load and resize a team logo, with caching."""
         cache_key = f"{league}_{team_abbrev}"
         if cache_key in self._logo_cache:
             return self._logo_cache[cache_key]
 
-        logo_path = self._get_logo_path(league, team_abbrev)
+        logo_path = self._get_logo_path(league, team_abbrev, game)
 
         if not logo_path.exists():
             self.logger.warning(f"Logo not found for {team_abbrev} at {logo_path}")
@@ -123,6 +134,10 @@ class GameRenderer:
             draw.text((x + dx, y + dy), text, font=font, fill=outline_color)
         draw.text((x, y), text, font=font, fill=fill)
 
+    def set_rankings_cache(self, rankings: Dict[str, int]) -> None:
+        """Set the team rankings cache for display."""
+        self._team_rankings_cache = rankings
+
     def render_game_card(self, game: Dict, game_type: str) -> Image.Image:
         """
         Render a game card as a PIL Image.
@@ -145,58 +160,135 @@ class GameRenderer:
             return self._render_error_card("Unknown type")
 
     def _render_live_game(self, game: Dict) -> Image.Image:
-        """Render a live baseball game card."""
+        """Render a live baseball game card with full scorebug elements."""
         try:
-            # Create main image with transparency
             main_img = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 255))
             overlay = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 0))
-            draw_overlay = ImageDraw.Draw(overlay)
+            draw = ImageDraw.Draw(overlay)
 
-            # Get team info and league
-            home_team = game.get('home_team', {})
-            away_team = game.get('away_team', {})
             league = game.get('league', 'mlb')
-
-            # Load team logos
-            home_logo = self._load_and_resize_logo(league, home_team.get('abbrev', ''))
-            away_logo = self._load_and_resize_logo(league, away_team.get('abbrev', ''))
+            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''), game)
+            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''), game)
 
             if not home_logo or not away_logo:
                 return self._render_error_card("Logo Error")
 
             center_y = self.display_height // 2
 
-            # Draw logos
-            home_x = self.display_width - home_logo.width + 10
-            home_y = center_y - (home_logo.height // 2)
-            main_img.paste(home_logo, (home_x, home_y), home_logo)
+            # Logos
+            main_img.paste(home_logo, (self.display_width - home_logo.width + 10, center_y - home_logo.height // 2), home_logo)
+            main_img.paste(away_logo, (-10, center_y - away_logo.height // 2), away_logo)
 
-            away_x = -10
-            away_y = center_y - (away_logo.height // 2)
-            main_img.paste(away_logo, (away_x, away_y), away_logo)
+            # Inning indicator (top center)
+            inning_half = game.get('inning_half', 'top')
+            inning_num = game.get('inning', 1)
+            if game.get('is_final'):
+                inning_text = "FINAL"
+            elif inning_half == 'end':
+                inning_text = f"E{inning_num}"
+            elif inning_half == 'mid':
+                inning_text = f"M{inning_num}"
+            else:
+                symbol = "▲" if inning_half == 'top' else "▼"
+                inning_text = f"{symbol}{inning_num}"
 
-            # Draw inning and status
-            inning_info = game.get('inning_info', {})
-            inning = inning_info.get('inning', 1)
-            inning_half = inning_info.get('half', 'top')
-            inning_symbol = "▲" if inning_half == 'top' else "▼"
-            inning_text = f"{inning_symbol}{inning}"
+            inning_font = self.fonts['time']
+            inning_bbox = draw.textbbox((0, 0), inning_text, font=inning_font)
+            inning_width = inning_bbox[2] - inning_bbox[0]
+            inning_x = (self.display_width - inning_width) // 2
+            inning_y = 1
+            self._draw_text_with_outline(draw, inning_text, (inning_x, inning_y), inning_font)
 
-            status_width = draw_overlay.textlength(inning_text, font=self.fonts['time'])
-            status_x = (self.display_width - status_width) // 2
-            status_y = 1
-            self._draw_text_with_outline(draw_overlay, inning_text, (status_x, status_y), self.fonts['time'])
+            # Bases diamond + Outs circles
+            bases_occupied = game.get('bases_occupied', [False, False, False])
+            outs = game.get('outs', 0)
 
-            # Draw scores
-            home_score = str(home_team.get("score", "0"))
-            away_score = str(away_team.get("score", "0"))
-            score_text = f"{away_score}-{home_score}"
-            score_width = draw_overlay.textlength(score_text, font=self.fonts['score'])
-            score_x = (self.display_width - score_width) // 2
-            score_y = (self.display_height // 2) - 3
-            self._draw_text_with_outline(draw_overlay, score_text, (score_x, score_y), self.fonts['score'])
+            base_diamond_size = 7
+            out_circle_diameter = 3
+            out_vertical_spacing = 2
+            spacing_between_bases_outs = 3
+            base_vert_spacing = 1
+            base_horiz_spacing = 1
 
-            # Composite and convert to RGB
+            base_cluster_height = base_diamond_size + base_vert_spacing + base_diamond_size
+            base_cluster_width = base_diamond_size + base_horiz_spacing + base_diamond_size
+
+            overall_start_y = inning_bbox[3] + 1
+            bases_origin_x = (self.display_width - base_cluster_width) // 2
+
+            # Outs column position
+            out_cluster_height = 3 * out_circle_diameter + 2 * out_vertical_spacing
+            if inning_half == 'top':
+                outs_column_x = bases_origin_x - spacing_between_bases_outs - out_circle_diameter
+            else:
+                outs_column_x = bases_origin_x + base_cluster_width + spacing_between_bases_outs
+            outs_column_start_y = overall_start_y + (base_cluster_height // 2) - (out_cluster_height // 2)
+
+            # Draw bases as diamond polygons
+            h_d = base_diamond_size // 2
+            base_fill = (255, 255, 255)
+            base_outline = (255, 255, 255)
+
+            # 2nd base (top center)
+            c2x = bases_origin_x + base_cluster_width // 2
+            c2y = overall_start_y + h_d
+            poly2 = [(c2x, overall_start_y), (c2x + h_d, c2y), (c2x, c2y + h_d), (c2x - h_d, c2y)]
+            draw.polygon(poly2, fill=base_fill if bases_occupied[1] else None, outline=base_outline)
+
+            base_bottom_y = c2y + h_d
+
+            # 3rd base (bottom left)
+            c3x = bases_origin_x + h_d
+            c3y = base_bottom_y + base_vert_spacing + h_d
+            poly3 = [(c3x, base_bottom_y + base_vert_spacing), (c3x + h_d, c3y), (c3x, c3y + h_d), (c3x - h_d, c3y)]
+            draw.polygon(poly3, fill=base_fill if bases_occupied[2] else None, outline=base_outline)
+
+            # 1st base (bottom right)
+            c1x = bases_origin_x + base_cluster_width - h_d
+            c1y = base_bottom_y + base_vert_spacing + h_d
+            poly1 = [(c1x, base_bottom_y + base_vert_spacing), (c1x + h_d, c1y), (c1x, c1y + h_d), (c1x - h_d, c1y)]
+            draw.polygon(poly1, fill=base_fill if bases_occupied[0] else None, outline=base_outline)
+
+            # Outs circles
+            for i in range(3):
+                cx = outs_column_x
+                cy = outs_column_start_y + i * (out_circle_diameter + out_vertical_spacing)
+                coords = [cx, cy, cx + out_circle_diameter, cy + out_circle_diameter]
+                if i < outs:
+                    draw.ellipse(coords, fill=(255, 255, 255))
+                else:
+                    draw.ellipse(coords, outline=(100, 100, 100))
+
+            # Balls-strikes count (below bases)
+            balls = game.get('balls', 0)
+            strikes = game.get('strikes', 0)
+            count_text = f"{balls}-{strikes}"
+            count_font = self.fonts['detail']
+            count_width = draw.textlength(count_text, font=count_font)
+            count_y = overall_start_y + base_cluster_height + 2
+            count_x = bases_origin_x + (base_cluster_width - count_width) // 2
+            self._draw_text_with_outline(draw, count_text, (int(count_x), count_y), count_font)
+
+            # Team:Score at bottom corners
+            score_font = self.fonts['score']
+            away_text = f"{game.get('away_abbr', '')}:{game.get('away_score', '0')}"
+            home_text = f"{game.get('home_abbr', '')}:{game.get('home_score', '0')}"
+            try:
+                font_height = score_font.getbbox("A")[3] - score_font.getbbox("A")[1]
+            except AttributeError:
+                font_height = 8
+            score_y = self.display_height - font_height - 2
+            self._draw_text_with_outline(draw, away_text, (2, score_y), score_font)
+            try:
+                home_w = draw.textbbox((0, 0), home_text, font=score_font)[2]
+            except AttributeError:
+                home_w = len(home_text) * 8
+            self._draw_text_with_outline(draw, home_text, (self.display_width - home_w - 2, score_y), score_font)
+
+            # Odds
+            if game.get('odds'):
+                self._draw_dynamic_odds(draw, game['odds'])
+
             main_img = Image.alpha_composite(main_img, overlay)
             return main_img.convert("RGB")
 
@@ -207,51 +299,42 @@ class GameRenderer:
     def _render_recent_game(self, game: Dict) -> Image.Image:
         """Render a recent baseball game card."""
         try:
-            # Create main image with transparency
             main_img = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 255))
             overlay = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 0))
-            draw_overlay = ImageDraw.Draw(overlay)
+            draw = ImageDraw.Draw(overlay)
 
-            # Get team info and league
-            home_team = game.get('home_team', {})
-            away_team = game.get('away_team', {})
             league = game.get('league', 'mlb')
-
-            # Load team logos
-            home_logo = self._load_and_resize_logo(league, home_team.get('abbrev', ''))
-            away_logo = self._load_and_resize_logo(league, away_team.get('abbrev', ''))
+            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''), game)
+            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''), game)
 
             if not home_logo or not away_logo:
                 return self._render_error_card("Logo Error")
 
             center_y = self.display_height // 2
 
-            # Draw logos
-            home_x = self.display_width - home_logo.width + 10
-            home_y = center_y - (home_logo.height // 2)
-            main_img.paste(home_logo, (home_x, home_y), home_logo)
+            # Logos (tighter fit for recent)
+            main_img.paste(home_logo, (self.display_width - home_logo.width + 2, center_y - home_logo.height // 2), home_logo)
+            main_img.paste(away_logo, (-2, center_y - away_logo.height // 2), away_logo)
 
-            away_x = -10
-            away_y = center_y - (away_logo.height // 2)
-            main_img.paste(away_logo, (away_x, away_y), away_logo)
-
-            # Draw "Final" status
+            # "Final" (top center)
             status_text = "Final"
-            status_width = draw_overlay.textlength(status_text, font=self.fonts['time'])
-            status_x = (self.display_width - status_width) // 2
-            status_y = 1
-            self._draw_text_with_outline(draw_overlay, status_text, (status_x, status_y), self.fonts['time'])
+            status_width = draw.textlength(status_text, font=self.fonts['time'])
+            self._draw_text_with_outline(draw, status_text, ((self.display_width - status_width) // 2, 1), self.fonts['time'])
 
-            # Draw scores
-            home_score = str(home_team.get("score", "0"))
-            away_score = str(away_team.get("score", "0"))
-            score_text = f"{away_score}-{home_score}"
-            score_width = draw_overlay.textlength(score_text, font=self.fonts['score'])
+            # Score (centered)
+            score_text = f"{game.get('away_score', '0')}-{game.get('home_score', '0')}"
+            score_width = draw.textlength(score_text, font=self.fonts['score'])
             score_x = (self.display_width - score_width) // 2
-            score_y = (self.display_height // 2) - 3
-            self._draw_text_with_outline(draw_overlay, score_text, (score_x, score_y), self.fonts['score'])
+            score_y = self.display_height - 14
+            self._draw_text_with_outline(draw, score_text, (score_x, score_y), self.fonts['score'], fill=(255, 200, 0))
 
-            # Composite and convert to RGB
+            # Records at bottom corners
+            self._draw_records(draw, game)
+
+            # Odds
+            if game.get('odds'):
+                self._draw_dynamic_odds(draw, game['odds'])
+
             main_img = Image.alpha_composite(main_img, overlay)
             return main_img.convert("RGB")
 
@@ -262,55 +345,174 @@ class GameRenderer:
     def _render_upcoming_game(self, game: Dict) -> Image.Image:
         """Render an upcoming baseball game card."""
         try:
-            # Create main image with transparency
             main_img = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 255))
             overlay = Image.new("RGBA", (self.display_width, self.display_height), (0, 0, 0, 0))
-            draw_overlay = ImageDraw.Draw(overlay)
+            draw = ImageDraw.Draw(overlay)
 
-            # Get team info and league
-            home_team = game.get('home_team', {})
-            away_team = game.get('away_team', {})
             league = game.get('league', 'mlb')
-
-            # Load team logos
-            home_logo = self._load_and_resize_logo(league, home_team.get('abbrev', ''))
-            away_logo = self._load_and_resize_logo(league, away_team.get('abbrev', ''))
+            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''), game)
+            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''), game)
 
             if not home_logo or not away_logo:
                 return self._render_error_card("Logo Error")
 
             center_y = self.display_height // 2
 
-            # Draw logos
-            home_x = self.display_width - home_logo.width + 10
-            home_y = center_y - (home_logo.height // 2)
-            main_img.paste(home_logo, (home_x, home_y), home_logo)
+            # Logos (tighter fit)
+            main_img.paste(home_logo, (self.display_width - home_logo.width + 2, center_y - home_logo.height // 2), home_logo)
+            main_img.paste(away_logo, (-2, center_y - away_logo.height // 2), away_logo)
 
-            away_x = -10
-            away_y = center_y - (away_logo.height // 2)
-            main_img.paste(away_logo, (away_x, away_y), away_logo)
+            # "Next Game" (top center)
+            status_font = self.fonts['status'] if self.display_width <= 128 else self.fonts['time']
+            status_text = "Next Game"
+            status_width = draw.textlength(status_text, font=status_font)
+            self._draw_text_with_outline(draw, status_text, ((self.display_width - status_width) // 2, 1), status_font)
 
-            # Draw game time
-            game_time = game.get('start_time_short', 'TBD')
-            time_width = draw_overlay.textlength(game_time, font=self.fonts['time'])
-            time_x = (self.display_width - time_width) // 2
-            time_y = 1
-            self._draw_text_with_outline(draw_overlay, game_time, (time_x, time_y), self.fonts['time'])
+            # Game time/date from start_time
+            start_time = game.get('start_time', '')
+            game_date = ''
+            game_time = ''
+            if start_time:
+                try:
+                    dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                    local_tz = pytz.timezone(self.config.get('timezone', 'US/Eastern'))
+                    dt_local = dt.astimezone(local_tz)
+                    game_date = dt_local.strftime('%b %d')
+                    game_time = dt_local.strftime('%-I:%M %p')
+                except (ValueError, AttributeError):
+                    game_time = start_time[:10] if len(start_time) > 10 else start_time
 
-            # Draw "vs" in center
-            vs_text = "VS"
-            vs_width = draw_overlay.textlength(vs_text, font=self.fonts['score'])
-            vs_x = (self.display_width - vs_width) // 2
-            vs_y = (self.display_height // 2) - 3
-            self._draw_text_with_outline(draw_overlay, vs_text, (vs_x, vs_y), self.fonts['score'])
+            time_font = self.fonts['time']
+            if game_date:
+                date_width = draw.textlength(game_date, font=time_font)
+                draw_y = center_y - 7
+                self._draw_text_with_outline(draw, game_date, ((self.display_width - date_width) // 2, draw_y), time_font)
+            if game_time:
+                time_width = draw.textlength(game_time, font=time_font)
+                draw_y = center_y + 2
+                self._draw_text_with_outline(draw, game_time, ((self.display_width - time_width) // 2, draw_y), time_font)
 
-            # Composite and convert to RGB
+            # Records at bottom corners
+            self._draw_records(draw, game)
+
+            # Odds
+            if game.get('odds'):
+                self._draw_dynamic_odds(draw, game['odds'])
+
             main_img = Image.alpha_composite(main_img, overlay)
             return main_img.convert("RGB")
 
         except Exception:
             self.logger.exception("Error rendering upcoming game")
             return self._render_error_card("Display error")
+
+    def _get_team_display_text(self, abbr: str, record: str, show_records: bool, show_ranking: bool) -> str:
+        """Get display text for a team (ranking or record)."""
+        if show_ranking:
+            rank = self._team_rankings_cache.get(abbr, 0)
+            if rank > 0:
+                return f"#{rank}"
+            if not show_records:
+                return ''
+        if show_records:
+            return record
+        return ''
+
+    def _draw_records(self, draw, game: Dict):
+        """Draw team records or rankings at bottom corners if enabled by config."""
+        league_config = game.get('league_config', {})
+        show_records = league_config.get('show_records', self.config.get('show_records', False))
+        show_ranking = league_config.get('show_ranking', self.config.get('show_ranking', False))
+
+        if not show_records and not show_ranking:
+            return
+
+        record_font = self.fonts['detail']
+        record_bbox = draw.textbbox((0, 0), "0-0", font=record_font)
+        record_height = record_bbox[3] - record_bbox[1]
+        record_y = self.display_height - record_height
+
+        # Away team (bottom left)
+        away_text = self._get_team_display_text(
+            game.get('away_abbr', ''), game.get('away_record', ''),
+            show_records, show_ranking
+        )
+        if away_text:
+            self._draw_text_with_outline(draw, away_text, (0, record_y), record_font)
+
+        # Home team (bottom right)
+        home_text = self._get_team_display_text(
+            game.get('home_abbr', ''), game.get('home_record', ''),
+            show_records, show_ranking
+        )
+        if home_text:
+            home_bbox = draw.textbbox((0, 0), home_text, font=record_font)
+            home_w = home_bbox[2] - home_bbox[0]
+            self._draw_text_with_outline(draw, home_text, (self.display_width - home_w, record_y), record_font)
+
+    def _draw_dynamic_odds(self, draw, odds: Dict) -> None:
+        """Draw odds with dynamic positioning based on favored team."""
+        try:
+            if not odds:
+                return
+
+            home_team_odds = odds.get('home_team_odds', {})
+            away_team_odds = odds.get('away_team_odds', {})
+            home_spread = home_team_odds.get('spread_odds')
+            away_spread = away_team_odds.get('spread_odds')
+
+            # Get top-level spread as fallback (only when individual spread is truly missing)
+            top_level_spread = odds.get('spread')
+            if top_level_spread is not None:
+                if home_spread is None:
+                    home_spread = top_level_spread
+                if away_spread is None:
+                    away_spread = -top_level_spread
+
+            # Determine favored team
+            home_favored = isinstance(home_spread, (int, float)) and home_spread < 0
+            away_favored = isinstance(away_spread, (int, float)) and away_spread < 0
+
+            favored_spread = None
+            favored_side = None
+
+            if home_favored:
+                favored_spread = home_spread
+                favored_side = 'home'
+            elif away_favored:
+                favored_spread = away_spread
+                favored_side = 'away'
+
+            # Odds row below the status/inning text row
+            status_bbox = draw.textbbox((0, 0), "A", font=self.fonts['time'])
+            odds_y = status_bbox[3] + 2  # just below the status row
+
+            # Show the negative spread on the appropriate side
+            font = self.fonts['detail']
+            if favored_spread is not None:
+                spread_text = str(favored_spread)
+                spread_width = draw.textlength(spread_text, font=font)
+                if favored_side == 'home':
+                    spread_x = self.display_width - spread_width
+                else:
+                    spread_x = 0
+                self._draw_text_with_outline(draw, spread_text, (spread_x, odds_y), font, fill=(0, 255, 0))
+
+            # Show over/under on opposite side
+            over_under = odds.get('over_under')
+            if over_under is not None and isinstance(over_under, (int, float)):
+                ou_text = f"O/U: {over_under}"
+                ou_width = draw.textlength(ou_text, font=font)
+                if favored_side == 'home':
+                    ou_x = 0
+                elif favored_side == 'away':
+                    ou_x = self.display_width - ou_width
+                else:
+                    ou_x = (self.display_width - ou_width) // 2
+                self._draw_text_with_outline(draw, ou_text, (ou_x, odds_y), font, fill=(0, 255, 0))
+
+        except Exception:
+            self.logger.exception("Error drawing odds")
 
     def _render_error_card(self, message: str) -> Image.Image:
         """Render an error message card."""
