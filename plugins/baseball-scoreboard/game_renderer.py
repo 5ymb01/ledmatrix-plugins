@@ -77,14 +77,8 @@ class GameRenderer:
             fonts['rank'] = ImageFont.load_default()
         return fonts
 
-    def _get_logo_path(self, league: str, team_abbrev: str, game: Dict = None) -> Path:
-        """Get the logo path for a team based on league config."""
-        # Use league_config logo_dir if available
-        if game and game.get('league_config'):
-            logo_dir = game['league_config'].get('logo_dir')
-            if logo_dir:
-                return Path(logo_dir) / f"{team_abbrev}.png"
-        # Fallback to defaults
+    def _get_logo_path(self, league: str, team_abbrev: str) -> Path:
+        """Get the logo path for a team based on league."""
         if league == 'mlb':
             return Path("assets/sports/mlb_logos") / f"{team_abbrev}.png"
         elif league == 'milb':
@@ -94,13 +88,13 @@ class GameRenderer:
         else:
             return Path("assets/sports/mlb_logos") / f"{team_abbrev}.png"
 
-    def _load_and_resize_logo(self, league: str, team_abbrev: str, game: Dict = None) -> Optional[Image.Image]:
+    def _load_and_resize_logo(self, league: str, team_abbrev: str) -> Optional[Image.Image]:
         """Load and resize a team logo, with caching."""
         cache_key = f"{league}_{team_abbrev}"
         if cache_key in self._logo_cache:
             return self._logo_cache[cache_key]
 
-        logo_path = self._get_logo_path(league, team_abbrev, game)
+        logo_path = self._get_logo_path(league, team_abbrev)
 
         if not logo_path.exists():
             self.logger.warning(f"Logo not found for {team_abbrev} at {logo_path}")
@@ -167,8 +161,8 @@ class GameRenderer:
             draw = ImageDraw.Draw(overlay)
 
             league = game.get('league', 'mlb')
-            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''), game)
-            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''), game)
+            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''))
+            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''))
 
             if not home_logo or not away_logo:
                 return self._render_error_card("Logo Error")
@@ -304,8 +298,8 @@ class GameRenderer:
             draw = ImageDraw.Draw(overlay)
 
             league = game.get('league', 'mlb')
-            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''), game)
-            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''), game)
+            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''))
+            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''))
 
             if not home_logo or not away_logo:
                 return self._render_error_card("Logo Error")
@@ -350,8 +344,8 @@ class GameRenderer:
             draw = ImageDraw.Draw(overlay)
 
             league = game.get('league', 'mlb')
-            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''), game)
-            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''), game)
+            home_logo = self._load_and_resize_logo(league, game.get('home_abbr', ''))
+            away_logo = self._load_and_resize_logo(league, game.get('away_abbr', ''))
 
             if not home_logo or not away_logo:
                 return self._render_error_card("Logo Error")
@@ -420,9 +414,11 @@ class GameRenderer:
 
     def _draw_records(self, draw, game: Dict):
         """Draw team records or rankings at bottom corners if enabled by config."""
-        league_config = game.get('league_config', {})
-        show_records = league_config.get('show_records', self.config.get('show_records', False))
-        show_ranking = league_config.get('show_ranking', self.config.get('show_ranking', False))
+        league = game.get('league', 'mlb')
+        league_config = self.config.get(league, {})
+        display_options = league_config.get('display_options', {})
+        show_records = display_options.get('show_records', self.config.get('show_records', False))
+        show_ranking = display_options.get('show_ranking', self.config.get('show_ranking', False))
 
         if not show_records and not show_ranking:
             return

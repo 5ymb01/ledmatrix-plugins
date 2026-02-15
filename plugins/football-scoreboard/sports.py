@@ -2068,26 +2068,22 @@ class SportsLive(SportsCore):
             return True
 
         # Check if clock is 0:00 in Q4 or OT
-        # Safely coerce clock to string to handle None or non-string values
         raw_clock = game.get("clock")
-        if raw_clock is None or not isinstance(raw_clock, str):
-            clock = "0:00"
-        else:
-            clock = raw_clock
         period = game.get("period", 0)
-        # Handle various clock formats: "0:00", ":00", "0", ":40" (stuck at :40)
-        clock_normalized = clock.replace(":", "").strip()
 
-        self.logger.debug(
-            f"[LIVE_PRIORITY_DEBUG] _is_game_really_over({game_str}): "
-            f"raw_clock={raw_clock!r}, clock='{clock}', clock_normalized='{clock_normalized}', period={period}, period_text='{period_text}'"
-        )
+        # Only check clock-based finish if we have a valid clock string
+        if isinstance(raw_clock, str) and raw_clock.strip() and period >= 4:
+            clock = raw_clock
+            clock_normalized = clock.replace(":", "").strip()
 
-        if period >= 4:
-            # In Q4 or OT, if clock is 0:00 or appears stuck (like :40), consider it over
+            self.logger.debug(
+                f"[LIVE_PRIORITY_DEBUG] _is_game_really_over({game_str}): "
+                f"raw_clock={raw_clock!r}, clock='{clock}', clock_normalized='{clock_normalized}', period={period}, period_text='{period_text}'"
+            )
+
             # Check for clock at 0:00 - various formats: "0:00", ":00", normalized "000"/"00"
             # Note: Clocks like ":40", ":50" are legitimate (under 1 minute remaining)
-            if clock_normalized == "000" or clock_normalized == "00" or clock == "0:00" or clock == ":00":
+            if clock_normalized in ("000", "00") or clock in ("0:00", ":00"):
                 self.logger.debug(
                     f"[LIVE_PRIORITY_DEBUG] _is_game_really_over({game_str}): "
                     f"returning True - clock appears to be 0:00 (clock='{clock}', normalized='{clock_normalized}', period={period})"
@@ -2335,8 +2331,11 @@ class SportsLive(SportsCore):
                     f"favorite_teams={self.favorite_teams if self.favorite_teams else '[] (showing all)'}"
                 )
                 
-                # Detect and remove stale games
-                self._detect_stale_games(new_live_games)
+                # Detect and remove stale games from persisted list
+                # (new_live_games has fresh last_seen, so stale check must
+                # run against the previous self.live_games)
+                with self._games_lock:
+                    self._detect_stale_games(self.live_games)
                 
                 # Log changes or periodically
                 current_time_for_log = (
@@ -2451,6 +2450,13 @@ class SportsLive(SportsCore):
                         self.live_games = []
                         self.current_game = None
                         self.current_game_index = 0
+
+                    # Prune game_update_timestamps for games no longer tracked
+                    active_ids = {g["id"] for g in self.live_games}
+                    self.game_update_timestamps = {
+                        gid: ts for gid, ts in self.game_update_timestamps.items()
+                        if gid in active_ids
+                    }
 
             else:
                 # Error fetching data or no events

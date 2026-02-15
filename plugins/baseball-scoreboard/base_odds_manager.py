@@ -129,10 +129,11 @@ class BaseOddsManager:
         try:
             # Map league names to ESPN API format
             league_mapping = {
+                "mlb": "mlb",
+                "college-baseball": "college-baseball",
                 "ncaa_fb": "college-football",
                 "nfl": "nfl",
                 "nba": "nba",
-                "mlb": "mlb",
                 "nhl": "nhl",
             }
 

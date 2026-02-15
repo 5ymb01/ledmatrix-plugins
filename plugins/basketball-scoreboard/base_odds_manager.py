@@ -57,7 +57,6 @@ class BaseOddsManager:
         # Configuration with defaults
         self.update_interval = 3600  # 1 hour default
         self.request_timeout = 30  # 30 seconds default
-        self.cache_ttl = 1800  # 30 minutes default
 
         # Load configuration if available
         if config_manager:
@@ -76,13 +75,11 @@ class BaseOddsManager:
                 "update_interval", self.update_interval
             )
             self.request_timeout = odds_config.get("timeout", self.request_timeout)
-            self.cache_ttl = odds_config.get("cache_ttl", self.cache_ttl)
 
             self.logger.debug(
                 f"BaseOddsManager configuration loaded: "
                 f"update_interval={self.update_interval}s, "
-                f"timeout={self.request_timeout}s, "
-                f"cache_ttl={self.cache_ttl}s"
+                f"timeout={self.request_timeout}s"
             )
 
         except Exception as e:
@@ -93,7 +90,7 @@ class BaseOddsManager:
         sport: str | None,
         league: str | None,
         event_id: str,
-        update_interval_seconds: int = None,
+        update_interval_seconds: Optional[int] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Fetch odds data for a specific game.
@@ -118,7 +115,7 @@ class BaseOddsManager:
         cached_data = self.cache_manager.get(cache_key)
 
         if cached_data:
-            # Filter out the "no_odds" marker – it should not be returned
+            # Filter out the "no_odds" marker - it should not be returned
             # as valid odds data.  Treat it as a cache miss so a fresh API
             # call is made once the cache entry expires.
             if isinstance(cached_data, dict) and cached_data.get("no_odds"):
@@ -165,23 +162,27 @@ class BaseOddsManager:
                 self.logger.debug("No odds data available for this game")
 
             if odds_data:
-                self.cache_manager.set(cache_key, odds_data)
+                self.cache_manager.set(cache_key, odds_data, ttl=interval)
                 self.logger.info(f"Saved odds data to cache for {cache_key}")
             else:
                 self.logger.debug(f"No odds data available for {cache_key}")
                 # Cache the fact that no odds are available to avoid repeated API calls
-                self.cache_manager.set(cache_key, {"no_odds": True})
+                self.cache_manager.set(cache_key, {"no_odds": True}, ttl=interval)
 
             return odds_data
 
         except requests.exceptions.RequestException as e:
-            self.logger.error(f"Error fetching odds from ESPN API for {cache_key}: {e}")
+            self.logger.exception(f"Error fetching odds from ESPN API for {cache_key}")
         except json.JSONDecodeError:
-            self.logger.error(
-                f"Error decoding JSON response from ESPN API for {cache_key}."
+            self.logger.exception(
+                f"Error decoding JSON response from ESPN API for {cache_key}"
             )
 
-        return self.cache_manager.get(cache_key)
+        # Return cached odds on error, but filter out the no_odds sentinel
+        cached = self.cache_manager.get(cache_key)
+        if isinstance(cached, dict) and cached.get("no_odds"):
+            return None
+        return cached
 
     def _extract_espn_data(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -248,7 +249,7 @@ class BaseOddsManager:
         sport: str,
         league: str,
         event_ids: List[str],
-        update_interval_seconds: int = None,
+        update_interval_seconds: Optional[int] = None,
     ) -> Dict[str, Dict[str, Any]]:
         """
         Fetch odds data for multiple games.
@@ -277,7 +278,7 @@ class BaseOddsManager:
 
         return results
 
-    def clear_cache(self, sport: str = None, league: str = None, event_id: str = None):
+    def clear_cache(self, sport: Optional[str] = None, league: Optional[str] = None, event_id: Optional[str] = None):
         """
         Clear odds cache for specific criteria.
 
@@ -289,9 +290,9 @@ class BaseOddsManager:
         if sport and league and event_id:
             # Clear specific event
             cache_key = f"odds_espn_{sport}_{league}_{event_id}"
-            self.cache_manager.delete(cache_key)
+            self.cache_manager.clear_cache(cache_key)
             self.logger.info(f"Cleared cache for {cache_key}")
         else:
             # Clear all odds cache
-            self.cache_manager.clear()
+            self.cache_manager.clear_cache()
             self.logger.info("Cleared all cache")

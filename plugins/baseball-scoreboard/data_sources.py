@@ -75,8 +75,13 @@ class ESPNDataSource(DataSource):
             events = data.get('events', [])
 
             # Filter for live games
-            live_events = [event for event in events
-                          if event.get('competitions', [{}])[0].get('status', {}).get('type', {}).get('state') == 'in']
+            live_events = []
+            for event in events:
+                competitions = event.get('competitions', [])
+                if not competitions:
+                    continue
+                if competitions[0].get('status', {}).get('type', {}).get('state') == 'in':
+                    live_events.append(event)
 
             self.logger.debug(f"Fetched {len(live_events)} live games for {sport}/{league}")
             return live_events
@@ -111,28 +116,7 @@ class ESPNDataSource(DataSource):
 
     def fetch_standings(self, sport: str, league: str) -> Dict:
         """Fetch standings from ESPN API."""
-        # College sports use rankings endpoint, professional leagues use standings
-        college_leagues = [
-            "mens-college-basketball",
-            "womens-college-basketball",
-            "college-football",
-        ]
-
-        # For college sports, use rankings endpoint directly
-        if league in college_leagues:
-            try:
-                url = f"{self.base_url}/{sport}/{league}/rankings"
-                response = self.session.get(url, headers=self.get_headers(), timeout=15)
-                response.raise_for_status()
-
-                data = response.json()
-                self.logger.debug(f"Fetched rankings for {sport}/{league}")
-                return data
-            except Exception as e:
-                self.logger.debug(f"Error fetching rankings from ESPN for {sport}/{league}: {e}")
-                return {}
-
-        # For professional leagues, try standings endpoint first
+        # Try standings endpoint first (for professional leagues like NFL)
         try:
             url = f"{self.base_url}/{sport}/{league}/standings"
             response = self.session.get(url, headers=self.get_headers(), timeout=15)
@@ -142,7 +126,7 @@ class ESPNDataSource(DataSource):
             self.logger.debug(f"Fetched standings for {sport}/{league}")
             return data
         except Exception as e:
-            # If standings doesn't exist, try rankings as fallback
+            # If standings doesn't exist, try rankings (for college sports)
             if hasattr(e, 'response') and hasattr(e.response, 'status_code') and e.response.status_code == 404:
                 try:
                     url = f"{self.base_url}/{sport}/{league}/rankings"
@@ -157,8 +141,8 @@ class ESPNDataSource(DataSource):
                     self.logger.debug(f"Standings/rankings not available for {sport}/{league} from ESPN API")
                     return {}
             else:
-                # Non-404 error - log at debug level since standings are optional
-                self.logger.debug(f"Error fetching standings from ESPN for {sport}/{league}: {e}")
+                # Non-404 error - log at error level since this is unexpected
+                self.logger.error(f"Error fetching standings from ESPN for {sport}/{league}: {e}")
                 return {}
 
 
@@ -183,7 +167,8 @@ class MLBAPIDataSource(DataSource):
             response.raise_for_status()
 
             data = response.json()
-            games = data.get('dates', [{}])[0].get('games', [])
+            dates = data.get('dates', [])
+            games = dates[0].get('games', []) if dates else []
 
             # Filter for live games
             live_games = [game for game in games
