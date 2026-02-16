@@ -230,7 +230,7 @@
       "id": "ufc-scoreboard",
       "name": "UFC Scoreboard",
       "description": "Live, recent, and upcoming UFC fights with fighter headshots, records, odds, and fight results. Based on original work by Alex Resnick (legoguy1000).",
-      "author": "ChuckBuilds",
+      "author": "LegoGuy1000",
       "category": "sports",
       "tags": [
         "ufc",
@@ -248,7 +248,7 @@
       "last_updated": "2026-02-15",
       "verified": true,
       "screenshot": "",
-      "latest_version": "1.1.0"
+      "latest_version": "1.1.1"
     },
     {
       "id": "basketball-scoreboard",

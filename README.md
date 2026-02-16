@@ -1,6 +1,62 @@
 # LEDMatrix Official Plugins
 
-> Official plugin repository for [LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix) &middot; [Installation](#-quick-install) &middot; [Documentation](#-for-maintainers) &middot; [Support](#-support--community)
+[![Plugins](https://img.shields.io/badge/plugins-27-blue)](./plugins.json)
+[![License](https://img.shields.io/badge/license-GPL--3.0-green)](LICENSE)
+[![Discord](https://img.shields.io/badge/Discord-community-5865F2?logo=discord&logoColor=white)](https://discord.gg/uW36dVAtcT)
+[![GitHub Stars](https://img.shields.io/github/stars/ChuckBuilds/ledmatrix-plugins?style=flat&color=yellow)](https://github.com/ChuckBuilds/ledmatrix-plugins)
+
+> Official plugin repository for [LEDMatrix](https://github.com/ChuckBuilds/LEDMatrix) &middot; [Installation](#quick-install) &middot; [Plugins](#available-plugins) &middot; [Development](#3rd-party-plugin-development) &middot; [Support](#support--community)
+
+---
+
+## See it in action
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="./plugins/football-scoreboard/">
+        <img width="384" height="96" src="https://github.com/user-attachments/assets/3561386b-1327-415d-92bc-f17f7e446984" alt="Football Scoreboard" />
+        <br /><sub><b>Football</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="./plugins/hockey-scoreboard/">
+        <img width="384" height="96" src="https://github.com/user-attachments/assets/1d32b4d9-7d01-4cb2-896b-bc9c889bf188" alt="Hockey Scoreboard" />
+        <br /><sub><b>Hockey</b></sub>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./plugins/ledmatrix-weather/">
+        <img width="384" height="96" src="https://github.com/user-attachments/assets/346817dc-3ff1-4491-a5ad-e70747acf6d0" alt="Weather Display" />
+        <br /><sub><b>Weather</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="./plugins/ledmatrix-music/">
+        <img width="384" height="96" src="https://github.com/user-attachments/assets/3317fd98-d73b-4ec0-8570-a2f38794c7cb" alt="Music Player" />
+        <br /><sub><b>Music</b></sub>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="./plugins/christmas-countdown/">
+        <img width="384" height="96" src="https://github.com/user-attachments/assets/899cb576-e7bc-41ee-853e-100395fc22dc" alt="Christmas Countdown" />
+        <br /><sub><b>Christmas Countdown</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="./plugins/football-scoreboard/">
+        <img width="384" height="96" src="https://github.com/user-attachments/assets/a5361ddf-5472-4724-9665-1783db4eb3d1" alt="Football Scoreboard" />
+        <br /><sub><b>Football Scoreboard</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
+> Each plugin links to its own README with more screenshots and configuration details.
 
 ---
 
@@ -22,7 +78,7 @@ curl -X POST http://your-pi-ip:5050/api/plugins/install \
 
 ## Available Plugins
 
-### Sports (8)
+### Sports (9)
 
 | Plugin | Description |
 |--------|-------------|
@@ -31,6 +87,7 @@ curl -X POST http://your-pi-ip:5050/api/plugins/install \
 | [Basketball Scoreboard](./plugins/basketball-scoreboard/) | NBA, NCAA & WNBA live scores and schedules |
 | [Baseball Scoreboard](./plugins/baseball-scoreboard/) | MLB, MiLB & NCAA Baseball live scores |
 | [Soccer Scoreboard](./plugins/soccer-scoreboard/) | Premier League, La Liga, Bundesliga, Serie A, Ligue 1, MLS |
+| [UFC Scoreboard](./plugins/ufc-scoreboard/) | UFC/MMA live fights, fighter headshots, records, odds & results &mdash; *by [LegoGuy1000](https://github.com/legoguy1000)* |
 | [Odds Ticker](./plugins/odds-ticker/) | Betting odds & lines across NFL, NBA, MLB, NCAA |
 | [Sports Leaderboard](./plugins/ledmatrix-leaderboard/) | League standings, rankings, conference records |
 | [Olympics Countdown](./plugins/olympics/) | Countdown to next Olympics with live medal counts |
@@ -112,6 +169,18 @@ curl -X POST http://your-pi-ip:5050/api/plugins/install \
 | Plugin | Description |
 |--------|-------------|
 | [Hello World](./plugins/hello-world/) | Plugin development example and starter template |
+
+---
+
+## Community Contributors
+
+LEDMatrix is open to community plugin contributions! The following plugins were built or contributed by community members:
+
+| Plugin | Contributor | Contribution |
+|--------|-------------|--------------|
+| [UFC Scoreboard](./plugins/ufc-scoreboard/) | [@LegoGuy1000](https://github.com/legoguy1000) | Original UFC/MMA implementation ([PR #137](https://github.com/ChuckBuilds/LEDMatrix/pull/137)) |
+
+Want to see your plugin here? Check out [3rd Party Plugin Development](#3rd-party-plugin-development) below or submit a plugin via [Discord](https://discord.gg/uW36dVAtcT).
 
 ---
 
