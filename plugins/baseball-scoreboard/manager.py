@@ -709,7 +709,7 @@ class BaseballScoreboardPlugin(BasePlugin if BasePlugin else object):
             league_games = []
             for mt in mode_types:
                 # Check if scroll mode is enabled for this league/mode
-                if self._get_display_mode('mlb', mt) == 'scroll':
+                if mode_type is None or self._get_display_mode('mlb', mt) == 'scroll':
                     league_manager = self._get_manager_for_league_mode('mlb', mt)
                     if league_manager:
                         league_games_list = self._get_games_from_manager(league_manager, mt)
@@ -737,7 +737,7 @@ class BaseballScoreboardPlugin(BasePlugin if BasePlugin else object):
             league_games = []
             for mt in mode_types:
                 # Check if scroll mode is enabled for this league/mode
-                if self._get_display_mode('milb', mt) == 'scroll':
+                if mode_type is None or self._get_display_mode('milb', mt) == 'scroll':
                     league_manager = self._get_manager_for_league_mode('milb', mt)
                     if league_manager:
                         league_games_list = self._get_games_from_manager(league_manager, mt)
@@ -764,7 +764,7 @@ class BaseballScoreboardPlugin(BasePlugin if BasePlugin else object):
             league_games = []
             for mt in mode_types:
                 # Check if scroll mode is enabled for this league/mode
-                if self._get_display_mode('ncaa_baseball', mt) == 'scroll':
+                if mode_type is None or self._get_display_mode('ncaa_baseball', mt) == 'scroll':
                     ncaa_manager = self._get_manager_for_league_mode('ncaa_baseball', mt)
                     if ncaa_manager:
                         ncaa_games = self._get_games_from_manager(ncaa_manager, mt)
@@ -2549,7 +2549,7 @@ class BaseballScoreboardPlugin(BasePlugin if BasePlugin else object):
             info = {
                 "plugin_id": self.plugin_id,
                 "name": "Baseball Scoreboard",
-                "version": "2.0.0",
+                "version": "1.3.0",
                 "enabled": self.is_enabled,
                 "display_size": f"{self.display_width}x{self.display_height}",
                 "mlb_enabled": self.mlb_enabled,
