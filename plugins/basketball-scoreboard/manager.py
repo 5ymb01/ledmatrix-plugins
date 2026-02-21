@@ -780,6 +780,7 @@ class BasketballScoreboardPlugin(BasePlugin if BasePlugin else object):
                 "show_favorite_teams_only": show_favorites_only,
                 "show_all_live": show_all_live,
                 "filtering": filtering,
+                "march_madness": league_config.get("march_madness", {}),
                 "background_service": {
                     "request_timeout": 30,
                     "max_retries": 3,
@@ -2289,7 +2290,7 @@ class BasketballScoreboardPlugin(BasePlugin if BasePlugin else object):
             info = {
                 "plugin_id": self.plugin_id,
                 "name": "Basketball Scoreboard",
-                "version": "2.0.0",
+                "version": "1.3.0",
                 "enabled": self.is_enabled,
                 "display_size": f"{self.display_width}x{self.display_height}",
                 "nba_enabled": self.nba_enabled,

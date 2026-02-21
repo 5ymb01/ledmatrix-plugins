@@ -28,7 +28,9 @@ except ImportError:
 
 class ImageRenderer:
     """Handles image creation and rendering for leaderboard display."""
-    
+
+    MARCH_MADNESS_LOGO_PATH = 'assets/sports/ncaa_logos/MARCH_MADNESS.png'
+
     def __init__(self, display_height: int, logger: Optional[logging.Logger] = None):
         """
         Initialize image renderer.
@@ -190,8 +192,12 @@ class ImageRenderer:
                 
                 self.logger.info(f"Drawing League {league_idx+1} ({league_key}) starting at x={current_x}px")
                 
-                # Draw league logo
-                league_logo = self._get_league_logo(league_config['league_logo'])
+                # Draw league logo (swap to March Madness logo during tournament)
+                league_logo_path = league_config['league_logo']
+                if league_data.get('is_tournament') and league_key in ('ncaam_basketball', 'ncaaw_basketball'):
+                    if os.path.exists(self.MARCH_MADNESS_LOGO_PATH):
+                        league_logo_path = self.MARCH_MADNESS_LOGO_PATH
+                league_logo = self._get_league_logo(league_logo_path)
                 if league_logo:
                     logo_height = height - 4
                     logo_width = int(logo_height * league_logo.width / league_logo.height)
@@ -263,7 +269,7 @@ class ImageRenderer:
             self.logger.error(f"Error creating leaderboard image: {e}")
             return None
     
-    def _get_number_text(self, league_key: str, league_config: Dict[str, Any], 
+    def _get_number_text(self, league_key: str, league_config: Dict[str, Any],
                          team: Dict[str, Any], index: int) -> str:
         """Get the number/ranking text to display for a team."""
         if league_key == 'ncaa_fb':
@@ -277,6 +283,10 @@ class ImageRenderer:
                     return team['record_summary']
                 else:
                     return f"{index+1}."
+        elif league_key in ('ncaam_basketball', 'ncaaw_basketball'):
+            if league_config.get('show_ranking', True) and team.get('rank', 0) > 0:
+                return f"#{team['rank']}"
+            return f"{index+1}."
         else:
             return f"{index+1}."
 

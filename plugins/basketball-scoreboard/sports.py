@@ -7,7 +7,7 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, ClassVar, Dict, List, Optional
 
 import pytz
 import requests
@@ -32,6 +32,8 @@ from src.logo_downloader import LogoDownloader, download_missing_logo
 
 
 class SportsCore(ABC):
+    TOURNAMENT_ROUND_ORDER: ClassVar[Dict[str, int]] = {"NCG": 0, "F4": 1, "E8": 2, "S16": 3, "R32": 4, "R64": 5, "": 6}
+
     def __init__(
         self,
         config: Dict[str, Any],
@@ -92,6 +94,23 @@ class SportsCore(ABC):
             "show_all_live",
             filtering_config.get("show_all_live", False),
         )
+
+        # March Madness / tournament settings
+        march_madness_config = self.mode_config.get("march_madness", {})
+        self.show_seeds: bool = march_madness_config.get("show_seeds", True)
+        self.show_round: bool = march_madness_config.get("show_round", True)
+        self.show_region: bool = march_madness_config.get("show_region", False)
+        self.tournament_games_limit: int = march_madness_config.get("tournament_games_limit", 10)
+
+        # Tournament mode: auto-enable during March Madness window for NCAA sports.
+        # Users can explicitly set tournament_mode to override the automatic behavior.
+        tournament_mode_override = march_madness_config.get("tournament_mode")
+        if tournament_mode_override is not None:
+            self.tournament_mode: bool = tournament_mode_override
+        elif self.sport_key in ("ncaam", "ncaaw"):
+            self.tournament_mode = self._is_march_madness_window()
+        else:
+            self.tournament_mode = False
 
         self.session = requests.Session()
         retry_strategy = Retry(
@@ -749,6 +768,104 @@ class SportsCore(ABC):
 
         return ""
 
+    @staticmethod
+    def _is_march_madness_window() -> bool:
+        """Check if the current date falls within the NCAA tournament window.
+
+        The men's tournament typically runs from Selection Sunday (mid-March)
+        through the championship game (first Monday in April). The women's
+        tournament runs on a similar schedule ending a day later.
+
+        We use a generous window (March 10 – April 10) to cover First Four,
+        Selection Sunday, and any scheduling variance year-to-year.
+        """
+        today = datetime.now(pytz.utc)
+        month_day = (today.month, today.day)
+        return (3, 10) <= month_day <= (4, 10)
+
+    @staticmethod
+    def _parse_tournament_round(headline: str) -> str:
+        """Parse tournament round abbreviation from ESPN notes headline.
+
+        ESPN formats:
+          Men's: "Men's Basketball Championship - {Region} Region - {Round}"
+          Women's: "NCAA Women's Championship - ... - {Round}"
+          Final Four: "... - Final Four"
+          Championship: "... - National Championship"
+        """
+        headline_lower = headline.lower()
+
+        if "national championship" in headline_lower:
+            return "NCG"
+        if "final four" in headline_lower:
+            return "F4"
+        if "elite 8" in headline_lower or "elite eight" in headline_lower:
+            return "E8"
+        if "sweet 16" in headline_lower or "sweet sixteen" in headline_lower:
+            return "S16"
+        if "2nd round" in headline_lower or "second round" in headline_lower:
+            return "R32"
+        if "1st round" in headline_lower or "first round" in headline_lower:
+            return "R64"
+
+        return ""
+
+    @staticmethod
+    def _parse_tournament_region(headline: str) -> str:
+        """Parse tournament region abbreviation from ESPN notes headline.
+
+        Returns short abbreviation: E, W, S, MW, or "" for Final Four/NCG.
+        Women's tournament uses numbered regionals (R1, R2, etc.).
+        """
+        headline_lower = headline.lower()
+        if "east region" in headline_lower:
+            return "E"
+        if "west region" in headline_lower:
+            return "W"
+        if "south region" in headline_lower:
+            return "S"
+        if "midwest region" in headline_lower:
+            return "MW"
+
+        # Women's format: "... - Regional 1 in City - ..."
+        match = re.search(r"Regional (\d+)", headline, re.IGNORECASE)
+        if match:
+            return f"R{match.group(1)}"
+
+        return ""
+
+    def _get_team_annotation(self, game: Dict, side: str) -> str:
+        """Get the annotation text (seed, ranking, or record) for a team side.
+
+        Args:
+            game: Game dict with team data.
+            side: 'away' or 'home'.
+
+        Returns:
+            Annotation string like '(3)', '#5', '28-4', or ''.
+        """
+        abbr = game.get(f"{side}_abbr", "")
+        if not abbr:
+            return ""
+
+        show_seeds = self.show_seeds and game.get("is_tournament", False)
+        seed = game.get(f"{side}_seed", 0)
+        if show_seeds and seed > 0:
+            return f"({seed})"
+
+        if self.show_ranking:
+            rank = self._team_rankings_cache.get(abbr, 0)
+            if rank > 0:
+                return f"#{rank}"
+            if self.show_records:
+                return game.get(f"{side}_record", "")
+            return ""
+
+        if self.show_records:
+            return game.get(f"{side}_record", "")
+
+        return ""
+
     def _extract_game_details_common(
         self, game_event: Dict
     ) -> tuple[Dict | None, Dict | None, Dict | None, Dict | None, Dict | None]:
@@ -968,6 +1085,44 @@ class SportsCore(ABC):
                 "away_logo_url": away_logo_url,
                 "is_within_window": True,  # Whether game is within display window
             }
+
+            # --- Tournament metadata extraction (March Madness) ---
+            competition_type = competition.get("type", {})
+            is_tournament = competition_type.get("abbreviation") == "TRNMNT"
+
+            # Also detect via notes headline as fallback
+            notes = competition.get("notes", [])
+            tournament_round = ""
+            tournament_region = ""
+            if notes:
+                headline = notes[0].get("headline", "")
+                if "Championship" in headline:
+                    is_tournament = True
+                # Parse round/region from notes for all tournament games
+                if is_tournament and headline:
+                    tournament_round = self._parse_tournament_round(headline)
+                    tournament_region = self._parse_tournament_region(headline)
+
+            # Extract seed from curatedRank during tournament
+            home_seed = 0
+            away_seed = 0
+            if is_tournament:
+                home_seed = home_team.get("curatedRank", {}).get("current", 0)
+                away_seed = away_team.get("curatedRank", {}).get("current", 0)
+                # Only valid tournament seeds are 1-16
+                if not 1 <= home_seed <= 16:
+                    home_seed = 0
+                if not 1 <= away_seed <= 16:
+                    away_seed = 0
+
+            details.update({
+                "is_tournament": is_tournament,
+                "tournament_round": tournament_round,
+                "tournament_region": tournament_region,
+                "home_seed": home_seed,
+                "away_seed": away_seed,
+            })
+
             return details, home_team, away_team, status, situation
         except Exception as e:
             # Log the problematic event structure if possible
@@ -1232,12 +1387,14 @@ class SportsUpcoming(SportsCore):
                 if game and game["is_upcoming"]:
                     # Only fetch odds for games that will be displayed
                     # If show_favorite_teams_only is True but no favorites configured, show all
+                    # Tournament mode bypasses favorite filtering for tournament games
                     if self.show_favorite_teams_only and self.favorite_teams:
                         if (
                             game["home_abbr"] not in self.favorite_teams
                             and game["away_abbr"] not in self.favorite_teams
                         ):
-                            continue
+                            if not (self.tournament_mode and game.get("is_tournament")):
+                                continue
                     processed_games.append(game)
                     # Count favorite team games for logging
                     if self.favorite_teams and (
@@ -1272,6 +1429,31 @@ class SportsUpcoming(SportsCore):
                 team_games = self._select_games_for_display(
                     processed_games, self.favorite_teams
                 )
+                # Tournament mode: merge non-favorite tournament games (capped)
+                if self.tournament_mode:
+                    existing_ids = {g.get("id") for g in team_games}
+                    tourney_extras = [
+                        g for g in processed_games
+                        if g.get("is_tournament")
+                        and g.get("id") not in existing_ids
+                    ]
+                    # Sort soonest-first, cap to limit
+                    tourney_extras.sort(
+                        key=lambda g: g.get("start_time_utc")
+                        or datetime.max.replace(tzinfo=timezone.utc)
+                    )
+                    tourney_extras = tourney_extras[:self.tournament_games_limit]
+                    if tourney_extras:
+                        team_games.extend(tourney_extras)
+                        # Re-sort combined list by start time
+                        team_games.sort(
+                            key=lambda g: g.get("start_time_utc")
+                            or datetime.max.replace(tzinfo=timezone.utc)
+                        )
+                        self.logger.info(
+                            f"Added {len(tourney_extras)} tournament games "
+                            f"(limit: {self.tournament_games_limit})"
+                        )
             else:
                 # No favorite teams: show N total games sorted by time (schedule view)
                 team_games = sorted(
@@ -1425,11 +1607,16 @@ class SportsUpcoming(SportsCore):
 
             # Note: Rankings are now handled in the records/rankings section below
 
-            # "Next Game" at the top (use smaller status font) with layout offsets
+            # Status text at the top - tournament round or "Next Game"
             status_font = self.fonts["status"]
             if display_width > 128:
                 status_font = self.fonts["time"]
-            status_text = "Next Game"
+            if self.show_round and game.get("is_tournament") and game.get("tournament_round"):
+                status_text = game["tournament_round"]
+                if self.show_region and game.get("tournament_region"):
+                    status_text = f"{status_text} {game['tournament_region']}"
+            else:
+                status_text = "Next Game"
             status_width = draw_overlay.textlength(status_text, font=status_font)
             status_x = (display_width - status_width) // 2 + self._get_layout_offset('status', 'x_offset')
             status_y = 1 + self._get_layout_offset('status', 'y_offset')
@@ -1460,8 +1647,11 @@ class SportsUpcoming(SportsCore):
                     draw_overlay, game["odds"], display_width, display_height
                 )
 
-            # Draw records or rankings if enabled
-            if self.show_records or self.show_ranking:
+            # Draw records, rankings, or tournament seeds if enabled
+            is_tourney = game.get("is_tournament", False)
+            show_seeds = is_tourney and self.show_seeds
+
+            if self.show_records or self.show_ranking or show_seeds:
                 try:
                     record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
                     self.logger.debug(f"Loaded 6px record font successfully")
@@ -1482,75 +1672,37 @@ class SportsUpcoming(SportsCore):
                     f"Record positioning: height={record_height}, record_y={record_y}, display_height={self.display_height}"
                 )
 
-                # Display away team info
-                if away_abbr:
-                    if self.show_ranking and self.show_records:
-                        # Rankings take priority, fall back to record for unranked teams
-                        away_rank = self._team_rankings_cache.get(away_abbr, 0)
-                        if away_rank > 0:
-                            away_text = f"#{away_rank}"
-                        else:
-                            away_text = game.get("away_record", "")
-                    elif self.show_ranking:
-                        # Show ranking only if available
-                        away_rank = self._team_rankings_cache.get(away_abbr, 0)
-                        if away_rank > 0:
-                            away_text = f"#{away_rank}"
-                        else:
-                            away_text = ""
-                    elif self.show_records:
-                        away_text = game.get("away_record", "")
-                    else:
-                        away_text = ""
+                # Display away team annotation (seed, ranking, or record)
+                away_text = self._get_team_annotation(game, "away")
+                if away_text:
+                    away_record_x = 0 + self._get_layout_offset('record', 'away_x_offset')
+                    self.logger.debug(
+                        f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
+                    )
+                    self._draw_text_with_outline(
+                        draw_overlay,
+                        away_text,
+                        (away_record_x, record_y),
+                        record_font,
+                    )
 
-                    if away_text:
-                        away_record_x = 0 + self._get_layout_offset('record', 'away_x_offset')
-                        self.logger.debug(
-                            f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
-                        )
-                        self._draw_text_with_outline(
-                            draw_overlay,
-                            away_text,
-                            (away_record_x, record_y),
-                            record_font,
-                        )
-
-                # Display home team info
-                if home_abbr:
-                    if self.show_ranking and self.show_records:
-                        # Rankings take priority, fall back to record for unranked teams
-                        home_rank = self._team_rankings_cache.get(home_abbr, 0)
-                        if home_rank > 0:
-                            home_text = f"#{home_rank}"
-                        else:
-                            home_text = game.get("home_record", "")
-                    elif self.show_ranking:
-                        # Show ranking only if available
-                        home_rank = self._team_rankings_cache.get(home_abbr, 0)
-                        if home_rank > 0:
-                            home_text = f"#{home_rank}"
-                        else:
-                            home_text = ""
-                    elif self.show_records:
-                        home_text = game.get("home_record", "")
-                    else:
-                        home_text = ""
-
-                    if home_text:
-                        home_record_bbox = draw_overlay.textbbox(
-                            (0, 0), home_text, font=record_font
-                        )
-                        home_record_width = home_record_bbox[2] - home_record_bbox[0]
-                        home_record_x = self.display_width - home_record_width + self._get_layout_offset('record', 'home_x_offset')
-                        self.logger.debug(
-                            f"Drawing home ranking '{home_text}' at ({home_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
-                        )
-                        self._draw_text_with_outline(
-                            draw_overlay,
-                            home_text,
-                            (home_record_x, record_y),
-                            record_font,
-                        )
+                # Display home team annotation (seed, ranking, or record)
+                home_text = self._get_team_annotation(game, "home")
+                if home_text:
+                    home_record_bbox = draw_overlay.textbbox(
+                        (0, 0), home_text, font=record_font
+                    )
+                    home_record_width = home_record_bbox[2] - home_record_bbox[0]
+                    home_record_x = self.display_width - home_record_width + self._get_layout_offset('record', 'home_x_offset')
+                    self.logger.debug(
+                        f"Drawing home ranking '{home_text}' at ({home_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
+                    )
+                    self._draw_text_with_outline(
+                        draw_overlay,
+                        home_text,
+                        (home_record_x, record_y),
+                        record_font,
+                    )
 
             # Composite and display
             main_img = Image.alpha_composite(main_img, overlay)
@@ -1805,10 +1957,44 @@ class SportsRecent(SportsCore):
                         processed_games.append(game)
             # Use single-pass algorithm for game selection
             # This properly handles games between two favorite teams (counts for both)
+            # Tournament mode: split tournament games out, combine after selection
+            tournament_games = []
+            if self.tournament_mode:
+                tournament_games = [g for g in processed_games if g.get("is_tournament")]
+
             if self.show_favorite_teams_only and self.favorite_teams:
                 team_games = self._select_recent_games_for_display(
                     processed_games, self.favorite_teams
                 )
+                # Add tournament games that weren't already selected (tournament mode bypass)
+                if tournament_games:
+                    existing_ids = {g.get("id") for g in team_games}
+                    tourney_extras = [
+                        tg for tg in tournament_games
+                        if tg.get("id") not in existing_ids
+                    ]
+                    # Sort by round significance (most important round first), then most recent
+                    tourney_extras.sort(
+                        key=lambda g: (
+                            self.TOURNAMENT_ROUND_ORDER.get(g.get("tournament_round", ""), 6),
+                            -(g.get("start_time_utc") or datetime.min.replace(tzinfo=pytz.utc)).timestamp(),
+                        )
+                    )
+                    # Cap to limit
+                    tourney_extras = tourney_extras[:self.tournament_games_limit]
+                    if tourney_extras:
+                        team_games.extend(tourney_extras)
+                        self.logger.info(
+                            f"Added {len(tourney_extras)} tournament games "
+                            f"(limit: {self.tournament_games_limit})"
+                        )
+                        # Re-sort combined list by round significance, then most recent
+                        team_games.sort(
+                            key=lambda g: (
+                                self.TOURNAMENT_ROUND_ORDER.get(g.get("tournament_round", ""), 6),
+                                -(g.get("start_time_utc") or datetime.min.replace(tzinfo=pytz.utc)).timestamp(),
+                            )
+                        )
                 # Debug: Show which games are selected for display
                 for i, game in enumerate(team_games):
                     self.logger.info(
@@ -2007,9 +2193,14 @@ class SportsRecent(SportsCore):
             )
 
             # "Final" text (Top center) with layout offsets
+            # Prepend tournament round for March Madness games
             status_text = game.get(
                 "period_text", "Final"
             )  # Use formatted period text (e.g., "Final/OT") or default "Final"
+            if self.show_round and game.get("is_tournament") and game.get("tournament_round"):
+                candidate = f"{game['tournament_round']} {status_text}"
+                if draw_overlay.textlength(candidate, font=self.fonts["time"]) <= display_width - 40:
+                    status_text = candidate
             status_width = draw_overlay.textlength(status_text, font=self.fonts["time"])
             status_x = (display_width - status_width) // 2 + self._get_layout_offset('status', 'x_offset')
             status_y = 1 + self._get_layout_offset('status', 'y_offset')
@@ -2017,14 +2208,29 @@ class SportsRecent(SportsCore):
                 draw_overlay, status_text, (status_x, status_y), self.fonts["time"]
             )
 
+            # Show game date for tournament games (helps distinguish games from different days/rounds)
+            if game.get("is_tournament") and game.get("game_date"):
+                try:
+                    date_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
+                except IOError:
+                    date_font = ImageFont.load_default()
+                date_text = game["game_date"]
+                date_width = draw_overlay.textlength(date_text, font=date_font)
+                date_x = (display_width - date_width) // 2 + self._get_layout_offset('status', 'x_offset')
+                date_y = 10 + self._get_layout_offset('status', 'y_offset')
+                self._draw_text_with_outline(draw_overlay, date_text, (date_x, date_y), date_font)
+
             # Draw odds if available
             if "odds" in game and game["odds"]:
                 self._draw_dynamic_odds(
                     draw_overlay, game["odds"], display_width, display_height
                 )
 
-            # Draw records or rankings if enabled
-            if self.show_records or self.show_ranking:
+            # Draw records, rankings, or tournament seeds if enabled
+            is_tourney = game.get("is_tournament", False)
+            show_seeds = is_tourney and self.show_seeds
+
+            if self.show_records or self.show_ranking or show_seeds:
                 try:
                     record_font = ImageFont.truetype("assets/fonts/4x6-font.ttf", 6)
                     self.logger.debug(f"Loaded 6px record font successfully")
@@ -2045,75 +2251,37 @@ class SportsRecent(SportsCore):
                     f"Record positioning: height={record_height}, record_y={record_y}, display_height={self.display_height}"
                 )
 
-                # Display away team info
-                if away_abbr:
-                    if self.show_ranking and self.show_records:
-                        # Rankings take priority, fall back to record for unranked teams
-                        away_rank = self._team_rankings_cache.get(away_abbr, 0)
-                        if away_rank > 0:
-                            away_text = f"#{away_rank}"
-                        else:
-                            away_text = game.get("away_record", "")
-                    elif self.show_ranking:
-                        # Show ranking only if available
-                        away_rank = self._team_rankings_cache.get(away_abbr, 0)
-                        if away_rank > 0:
-                            away_text = f"#{away_rank}"
-                        else:
-                            away_text = ""
-                    elif self.show_records:
-                        away_text = game.get("away_record", "")
-                    else:
-                        away_text = ""
+                # Display away team annotation (seed, ranking, or record)
+                away_text = self._get_team_annotation(game, "away")
+                if away_text:
+                    away_record_x = 0 + self._get_layout_offset('record', 'away_x_offset')
+                    self.logger.debug(
+                        f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
+                    )
+                    self._draw_text_with_outline(
+                        draw_overlay,
+                        away_text,
+                        (away_record_x, record_y),
+                        record_font,
+                    )
 
-                    if away_text:
-                        away_record_x = 0 + self._get_layout_offset('record', 'away_x_offset')
-                        self.logger.debug(
-                            f"Drawing away ranking '{away_text}' at ({away_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
-                        )
-                        self._draw_text_with_outline(
-                            draw_overlay,
-                            away_text,
-                            (away_record_x, record_y),
-                            record_font,
-                        )
-
-                # Display home team info
-                if home_abbr:
-                    if self.show_ranking and self.show_records:
-                        # Rankings take priority, fall back to record for unranked teams
-                        home_rank = self._team_rankings_cache.get(home_abbr, 0)
-                        if home_rank > 0:
-                            home_text = f"#{home_rank}"
-                        else:
-                            home_text = game.get("home_record", "")
-                    elif self.show_ranking:
-                        # Show ranking only if available
-                        home_rank = self._team_rankings_cache.get(home_abbr, 0)
-                        if home_rank > 0:
-                            home_text = f"#{home_rank}"
-                        else:
-                            home_text = ""
-                    elif self.show_records:
-                        home_text = game.get("home_record", "")
-                    else:
-                        home_text = ""
-
-                    if home_text:
-                        home_record_bbox = draw_overlay.textbbox(
-                            (0, 0), home_text, font=record_font
-                        )
-                        home_record_width = home_record_bbox[2] - home_record_bbox[0]
-                        home_record_x = display_width - home_record_width + self._get_layout_offset('record', 'home_x_offset')
-                        self.logger.debug(
-                            f"Drawing home ranking '{home_text}' at ({home_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
-                        )
-                        self._draw_text_with_outline(
-                            draw_overlay,
-                            home_text,
-                            (home_record_x, record_y),
-                            record_font,
-                        )
+                # Display home team annotation (seed, ranking, or record)
+                home_text = self._get_team_annotation(game, "home")
+                if home_text:
+                    home_record_bbox = draw_overlay.textbbox(
+                        (0, 0), home_text, font=record_font
+                    )
+                    home_record_width = home_record_bbox[2] - home_record_bbox[0]
+                    home_record_x = display_width - home_record_width + self._get_layout_offset('record', 'home_x_offset')
+                    self.logger.debug(
+                        f"Drawing home ranking '{home_text}' at ({home_record_x}, {record_y}) with font size {record_font.size if hasattr(record_font, 'size') else 'unknown'}"
+                    )
+                    self._draw_text_with_outline(
+                        draw_overlay,
+                        home_text,
+                        (home_record_x, record_y),
+                        record_font,
+                    )
 
             self._custom_scorebug_layout(game, draw_overlay)
             # Composite and display
@@ -2335,240 +2503,237 @@ class SportsLive(SportsCore):
                 self._fetch_team_rankings()
 
             # Fetch live game data
-                data = self._fetch_data()
-                new_live_games = []
-                if not data:
-                    self.logger.debug(f"No data returned from _fetch_data() for {self.sport_key}")
-                elif "events" not in data:
-                    self.logger.debug(f"Data returned but no 'events' key for {self.sport_key}: {list(data.keys()) if isinstance(data, dict) else type(data)}")
-                elif data and "events" in data:
-                    total_events = len(data["events"])
-                    self.logger.debug(f"Fetched {total_events} total events from API for {self.sport_key}")
-                    
-                    live_or_halftime_count = 0
-                    filtered_out_count = 0
-                    
-                    for game in data["events"]:
-                        details = self._extract_game_details(game)
-                        if details:
-                            # Log game status for debugging
-                            status_state = game.get("competitions", [{}])[0].get("status", {}).get("type", {}).get("state", "unknown")
-                            self.logger.debug(
-                                f"Game {details.get('away_abbr', '?')}@{details.get('home_abbr', '?')}: "
-                                f"state={status_state}, is_live={details.get('is_live')}, "
-                                f"is_halftime={details.get('is_halftime')}, is_final={details.get('is_final')}"
-                            )
-
-                            # Filter out final games and games that appear to be over
-                            if details.get("is_final", False):
-                                continue
-
-                            if self._is_game_really_over(details):
-                                self.logger.info(
-                                    f"Skipping game that appears final: {details.get('away_abbr')}@{details.get('home_abbr')} "
-                                    f"(clock={details.get('clock')}, period={details.get('period')}, period_text={details.get('period_text')})"
-                                )
-                                continue
-
-                            if details["is_live"] or details["is_halftime"]:
-                                live_or_halftime_count += 1
-
-                                # Filtering logic matching SportsUpcoming:
-                                # - If show_all_live = True → show all games
-                                # - If show_favorite_teams_only = False → show all games
-                                # - If show_favorite_teams_only = True but favorite_teams is empty → show all games (fallback)
-                                # - If show_favorite_teams_only = True and favorite_teams has teams → only show games with those teams
-                                if self.show_all_live:
-                                    # Always show all live games if show_all_live is enabled
-                                    should_include = True
-                                elif not self.show_favorite_teams_only:
-                                    # If favorite teams filtering is disabled, show all games
-                                    should_include = True
-                                elif not self.favorite_teams:
-                                    # If favorite teams filtering is enabled but no favorites are configured,
-                                    # show all games (same behavior as SportsUpcoming)
-                                    should_include = True
-                                else:
-                                    # Favorite teams filtering is enabled AND favorites are configured
-                                    # Only show games involving favorite teams
-                                    should_include = (
-                                        details["home_abbr"] in self.favorite_teams
-                                        or details["away_abbr"] in self.favorite_teams
-                                    )
-                                
-                                if not should_include:
-                                    filtered_out_count += 1
-                                    self.logger.debug(
-                                        f"Filtered out live game {details.get('away_abbr')}@{details.get('home_abbr')}: "
-                                        f"show_all_live={self.show_all_live}, "
-                                        f"show_favorite_teams_only={self.show_favorite_teams_only}, "
-                                        f"favorite_teams={self.favorite_teams}"
-                                    )
-                                
-                                if should_include:
-                                    # Track game timestamps for stale detection
-                                    game_id = details.get("id")
-                                    if game_id:
-                                        current_clock = details.get("clock", "")
-                                        current_score = f"{details.get('away_score', '0')}-{details.get('home_score', '0')}"
-
-                                        if game_id not in self.game_update_timestamps:
-                                            self.game_update_timestamps[game_id] = {}
-
-                                        timestamps = self.game_update_timestamps[game_id]
-                                        timestamps["last_seen"] = time.time()
-
-                                        if timestamps.get("last_clock") != current_clock:
-                                            timestamps["last_clock"] = current_clock
-                                            timestamps["clock_changed_at"] = time.time()
-                                        if timestamps.get("last_score") != current_score:
-                                            timestamps["last_score"] = current_score
-                                            timestamps["score_changed_at"] = time.time()
-
-                                    if self.show_odds:
-                                        self._fetch_odds(details)
-                                    new_live_games.append(details)
-
-                    # Detect and remove stale games from persisted list
-                    # (new_live_games has fresh last_seen, so stale check must
-                    # run against the previous self.live_games)
-                    with self._games_lock:
-                        self._detect_stale_games(self.live_games)
-
-                    self.logger.info(
-                        f"Live game filtering: {total_events} total events, "
-                        f"{live_or_halftime_count} live/halftime, "
-                        f"{filtered_out_count} filtered out, "
-                        f"{len(new_live_games)} included | "
-                        f"show_all_live={self.show_all_live}, "
-                        f"show_favorite_teams_only={self.show_favorite_teams_only}, "
-                        f"favorite_teams={self.favorite_teams if self.favorite_teams else '[] (showing all)'}"
-                    )
-                    # Log changes or periodically
-                    current_time_for_log = (
-                        time.time()
-                    )  # Use a consistent time for logging comparison
-                    should_log = (
-                        current_time_for_log - self.last_log_time >= self.log_interval
-                        or len(new_live_games) != len(self.live_games)
-                        or any(
-                            g1["id"] != g2.get("id")
-                            for g1, g2 in zip(self.live_games, new_live_games)
-                        )  # Check if game IDs changed
-                        or (
-                            not self.live_games and new_live_games
-                        )  # Log if games appeared
-                    )
-
-                    if should_log:
-                        if new_live_games:
-                            filter_text = (
-                                "favorite teams"
-                                if self.show_favorite_teams_only or self.show_all_live
-                                else "all teams"
-                            )
-                            self.logger.info(
-                                f"Found {len(new_live_games)} live/halftime games for {filter_text}."
-                            )
-                            for (
-                                game_info
-                            ) in new_live_games:  # Renamed game to game_info
-                                self.logger.info(
-                                    f"  - {game_info['away_abbr']}@{game_info['home_abbr']} ({game_info.get('status_text', 'N/A')})"
-                                )
-                        else:
-                            filter_text = (
-                                "favorite teams"
-                                if self.show_favorite_teams_only or self.show_all_live
-                                else "criteria"
-                            )
-                            self.logger.info(
-                                f"No live/halftime games found for {filter_text}."
-                            )
-                        self.last_log_time = current_time_for_log
-
-                    # Update game list and current game (protected by lock for thread safety)
-                    with self._games_lock:
-                        if new_live_games:
-                            # Check if the games themselves changed, not just scores/time
-                            new_game_ids = {g["id"] for g in new_live_games}
-                            current_game_ids = {g["id"] for g in self.live_games}
-
-                            if new_game_ids != current_game_ids:
-                                self.live_games = sorted(
-                                    new_live_games,
-                                    key=lambda g: g.get("start_time_utc")
-                                    or datetime.now(timezone.utc),
-                                )  # Sort by start time
-                                # Reset index if current game is gone or list is new
-                                if (
-                                    not self.current_game
-                                    or self.current_game["id"] not in new_game_ids
-                                ):
-                                    self.current_game_index = 0
-                                    self.current_game = (
-                                        self.live_games[0] if self.live_games else None
-                                    )
-                                    self.last_game_switch = current_time
-                                else:
-                                    # Find current game's new index if it still exists
-                                    try:
-                                        self.current_game_index = next(
-                                            i
-                                            for i, g in enumerate(self.live_games)
-                                            if g["id"] == self.current_game["id"]
-                                        )
-                                        self.current_game = self.live_games[
-                                            self.current_game_index
-                                        ]  # Update current_game with fresh data
-                                    except (
-                                        StopIteration
-                                    ):  # Should not happen if check above passed, but safety first
-                                        self.current_game_index = 0
-                                        self.current_game = self.live_games[0]
-                                        self.last_game_switch = current_time
-
-                            else:
-                                # Just update the data for the existing games
-                                temp_game_dict = {g["id"]: g for g in new_live_games}
-                                self.live_games = [
-                                    temp_game_dict.get(g["id"], g) for g in self.live_games
-                                ]  # Update in place
-                                if self.current_game:
-                                    self.current_game = temp_game_dict.get(
-                                        self.current_game["id"], self.current_game
-                                    )
-
-                            # Display update handled by main loop based on interval
-
-                        else:
-                            # No live games found
-                            if self.live_games:  # Were there games before?
-                                self.logger.info(
-                                    "Live games previously showing have ended or are no longer live."
-                                )  # Changed log prefix
-                            self.live_games = []
-                            self.current_game = None
-                            self.current_game_index = 0
-
-                        # Prune game_update_timestamps for games no longer tracked
-                        active_ids = {g["id"] for g in self.live_games}
-                        self.game_update_timestamps = {
-                            gid: ts for gid, ts in self.game_update_timestamps.items()
-                            if gid in active_ids
-                        }
-
+            data = self._fetch_data()
+            new_live_games = []
+            if not data:
+                self.logger.debug(f"No data returned from _fetch_data() for {self.sport_key}")
+                if self.live_games:
+                    self.logger.warning("Could not fetch update; keeping existing live game data.")
                 else:
-                    # Error fetching data or no events
-                    if self.live_games:  # Were there games before?
-                        self.logger.warning(
-                            "Could not fetch update; keeping existing live game data for now."
-                        )  # Changed log prefix
+                    self.logger.warning("Could not fetch data and no existing live games.")
+                    self.current_game = None
+            elif "events" not in data:
+                self.logger.debug(f"Data returned but no 'events' key for {self.sport_key}: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+            else:
+                total_events = len(data["events"])
+                self.logger.debug(f"Fetched {total_events} total events from API for {self.sport_key}")
+                    
+                live_or_halftime_count = 0
+                filtered_out_count = 0
+                    
+                for game in data["events"]:
+                    details = self._extract_game_details(game)
+                    if details:
+                        # Log game status for debugging
+                        status_state = game.get("competitions", [{}])[0].get("status", {}).get("type", {}).get("state", "unknown")
+                        self.logger.debug(
+                            f"Game {details.get('away_abbr', '?')}@{details.get('home_abbr', '?')}: "
+                            f"state={status_state}, is_live={details.get('is_live')}, "
+                            f"is_halftime={details.get('is_halftime')}, is_final={details.get('is_final')}"
+                        )
+
+                        # Filter out final games and games that appear to be over
+                        if details.get("is_final", False):
+                            continue
+
+                        if self._is_game_really_over(details):
+                            self.logger.info(
+                                f"Skipping game that appears final: {details.get('away_abbr')}@{details.get('home_abbr')} "
+                                f"(clock={details.get('clock')}, period={details.get('period')}, period_text={details.get('period_text')})"
+                            )
+                            continue
+
+                        if details["is_live"] or details["is_halftime"]:
+                            live_or_halftime_count += 1
+
+                            # Filtering logic:
+                            # - Tournament mode + tournament game → always show
+                            # - If show_all_live = True → show all games
+                            # - If show_favorite_teams_only = False → show all games
+                            # - If show_favorite_teams_only = True but favorite_teams is empty → show all games (fallback)
+                            # - If show_favorite_teams_only = True and favorite_teams has teams → only show games with those teams
+                            if self.tournament_mode and details.get("is_tournament"):
+                                # Tournament mode: show ALL tournament games
+                                should_include = True
+                            elif self.show_all_live:
+                                # Always show all live games if show_all_live is enabled
+                                should_include = True
+                            elif not self.show_favorite_teams_only:
+                                # If favorite teams filtering is disabled, show all games
+                                should_include = True
+                            elif not self.favorite_teams:
+                                # If favorite teams filtering is enabled but no favorites are configured,
+                                # show all games (same behavior as SportsUpcoming)
+                                should_include = True
+                            else:
+                                # Favorite teams filtering is enabled AND favorites are configured
+                                # Only show games involving favorite teams
+                                should_include = (
+                                    details["home_abbr"] in self.favorite_teams
+                                    or details["away_abbr"] in self.favorite_teams
+                                )
+                                
+                            if not should_include:
+                                filtered_out_count += 1
+                                self.logger.debug(
+                                    f"Filtered out live game {details.get('away_abbr')}@{details.get('home_abbr')}: "
+                                    f"show_all_live={self.show_all_live}, "
+                                    f"show_favorite_teams_only={self.show_favorite_teams_only}, "
+                                    f"favorite_teams={self.favorite_teams}"
+                                )
+                                
+                            if should_include:
+                                # Track game timestamps for stale detection
+                                game_id = details.get("id")
+                                if game_id:
+                                    current_clock = details.get("clock", "")
+                                    current_score = f"{details.get('away_score', '0')}-{details.get('home_score', '0')}"
+
+                                    if game_id not in self.game_update_timestamps:
+                                        self.game_update_timestamps[game_id] = {}
+
+                                    timestamps = self.game_update_timestamps[game_id]
+                                    timestamps["last_seen"] = time.time()
+
+                                    if timestamps.get("last_clock") != current_clock:
+                                        timestamps["last_clock"] = current_clock
+                                        timestamps["clock_changed_at"] = time.time()
+                                    if timestamps.get("last_score") != current_score:
+                                        timestamps["last_score"] = current_score
+                                        timestamps["score_changed_at"] = time.time()
+
+                                if self.show_odds:
+                                    self._fetch_odds(details)
+                                new_live_games.append(details)
+
+                # Detect and remove stale games from persisted list
+                # (new_live_games has fresh last_seen, so stale check must
+                # run against the previous self.live_games)
+                with self._games_lock:
+                    self._detect_stale_games(self.live_games)
+
+                self.logger.info(
+                    f"Live game filtering: {total_events} total events, "
+                    f"{live_or_halftime_count} live/halftime, "
+                    f"{filtered_out_count} filtered out, "
+                    f"{len(new_live_games)} included | "
+                    f"show_all_live={self.show_all_live}, "
+                    f"show_favorite_teams_only={self.show_favorite_teams_only}, "
+                    f"favorite_teams={self.favorite_teams if self.favorite_teams else '[] (showing all)'}"
+                )
+                # Log changes or periodically
+                current_time_for_log = (
+                    time.time()
+                )  # Use a consistent time for logging comparison
+                should_log = (
+                    current_time_for_log - self.last_log_time >= self.log_interval
+                    or len(new_live_games) != len(self.live_games)
+                    or any(
+                        g1["id"] != g2.get("id")
+                        for g1, g2 in zip(self.live_games, new_live_games)
+                    )  # Check if game IDs changed
+                    or (
+                        not self.live_games and new_live_games
+                    )  # Log if games appeared
+                )
+
+                if should_log:
+                    if new_live_games:
+                        filter_text = (
+                            "favorite teams"
+                            if self.show_favorite_teams_only or self.show_all_live
+                            else "all teams"
+                        )
+                        self.logger.info(
+                            f"Found {len(new_live_games)} live/halftime games for {filter_text}."
+                        )
+                        for (
+                            game_info
+                        ) in new_live_games:  # Renamed game to game_info
+                            self.logger.info(
+                                f"  - {game_info['away_abbr']}@{game_info['home_abbr']} ({game_info.get('status_text', 'N/A')})"
+                            )
                     else:
-                        self.logger.warning(
-                            "Could not fetch data and no existing live games."
-                        )  # Changed log prefix
-                        self.current_game = None  # Clear current game if fetch fails and no games were active
+                        filter_text = (
+                            "favorite teams"
+                            if self.show_favorite_teams_only or self.show_all_live
+                            else "criteria"
+                        )
+                        self.logger.info(
+                            f"No live/halftime games found for {filter_text}."
+                        )
+                    self.last_log_time = current_time_for_log
+
+                # Update game list and current game (protected by lock for thread safety)
+                with self._games_lock:
+                    if new_live_games:
+                        # Check if the games themselves changed, not just scores/time
+                        new_game_ids = {g["id"] for g in new_live_games}
+                        current_game_ids = {g["id"] for g in self.live_games}
+
+                        if new_game_ids != current_game_ids:
+                            self.live_games = sorted(
+                                new_live_games,
+                                key=lambda g: g.get("start_time_utc")
+                                or datetime.now(timezone.utc),
+                            )  # Sort by start time
+                            # Reset index if current game is gone or list is new
+                            if (
+                                not self.current_game
+                                or self.current_game["id"] not in new_game_ids
+                            ):
+                                self.current_game_index = 0
+                                self.current_game = (
+                                    self.live_games[0] if self.live_games else None
+                                )
+                                self.last_game_switch = current_time
+                            else:
+                                # Find current game's new index if it still exists
+                                try:
+                                    self.current_game_index = next(
+                                        i
+                                        for i, g in enumerate(self.live_games)
+                                        if g["id"] == self.current_game["id"]
+                                    )
+                                    self.current_game = self.live_games[
+                                        self.current_game_index
+                                    ]  # Update current_game with fresh data
+                                except (
+                                    StopIteration
+                                ):  # Should not happen if check above passed, but safety first
+                                    self.current_game_index = 0
+                                    self.current_game = self.live_games[0]
+                                    self.last_game_switch = current_time
+
+                        else:
+                            # Just update the data for the existing games
+                            temp_game_dict = {g["id"]: g for g in new_live_games}
+                            self.live_games = [
+                                temp_game_dict.get(g["id"], g) for g in self.live_games
+                            ]  # Update in place
+                            if self.current_game:
+                                self.current_game = temp_game_dict.get(
+                                    self.current_game["id"], self.current_game
+                                )
+
+                        # Display update handled by main loop based on interval
+
+                    else:
+                        # No live games found
+                        if self.live_games:  # Were there games before?
+                            self.logger.info(
+                                "Live games previously showing have ended or are no longer live."
+                            )  # Changed log prefix
+                        self.live_games = []
+                        self.current_game = None
+                        self.current_game_index = 0
+
+                    # Prune game_update_timestamps for games no longer tracked
+                    active_ids = {g["id"] for g in self.live_games}
+                    self.game_update_timestamps = {
+                        gid: ts for gid, ts in self.game_update_timestamps.items()
+                        if gid in active_ids
+                    }
 
             # Handle game switching (protected by lock for thread safety)
             with self._games_lock:
