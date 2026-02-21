@@ -436,6 +436,30 @@ class F1ScoreboardPlugin(BasePlugin):
             self.logger.warning("Unknown display mode: %s", display_mode)
             return False
 
+    def _enrich_upcoming_with_countdown(self,
+                                        race: Dict) -> Dict:
+        """Return a shallow copy of race with fresh countdown_seconds set."""
+        upcoming = dict(race)
+        upcoming["countdown_seconds"] = None
+
+        now = datetime.now(timezone.utc)
+
+        for session in upcoming.get("sessions", []):
+            if session.get("status_state") == "pre" and session.get("date"):
+                try:
+                    parsed_dt = datetime.fromisoformat(
+                        session["date"].replace("Z", "+00:00"))
+                    if parsed_dt > now:
+                        upcoming["countdown_seconds"] = max(
+                            0, (parsed_dt - now).total_seconds())
+                        upcoming["next_session_type"] = session.get(
+                            "type_abbr", "")
+                        break
+                except (ValueError, TypeError):
+                    continue
+
+        return upcoming
+
     def _display_upcoming(self, force_clear: bool) -> bool:
         """Display the upcoming race card (static)."""
         if not self._upcoming_race:
@@ -448,28 +472,7 @@ class F1ScoreboardPlugin(BasePlugin):
                           (0, 0, 0)),
                 (0, 0))
 
-        # Work on a shallow copy to avoid mutating cached data
-        upcoming = dict(self._upcoming_race)
-        upcoming["countdown_seconds"] = None
-
-        now = datetime.now(timezone.utc)
-        next_session_dt = None
-
-        for session in upcoming.get("sessions", []):
-            if session.get("status_state") == "pre" and session.get("date"):
-                try:
-                    parsed_dt = datetime.fromisoformat(
-                        session["date"].replace("Z", "+00:00"))
-                    if parsed_dt > now:
-                        next_session_dt = parsed_dt
-                        upcoming["countdown_seconds"] = max(
-                            0, (parsed_dt - now).total_seconds())
-                        upcoming["next_session_type"] = session.get(
-                            "type_abbr", "")
-                        break
-                except (ValueError, TypeError):
-                    continue
-
+        upcoming = self._enrich_upcoming_with_countdown(self._upcoming_race)
         card = self.renderer.render_upcoming_race(upcoming)
         self.display_manager.image.paste(card, (0, 0))
         self.display_manager.update_display()
@@ -513,7 +516,7 @@ class F1ScoreboardPlugin(BasePlugin):
         # Add upcoming race card if available
         if self._upcoming_race:
             upcoming_card = self.renderer.render_upcoming_race(
-                self._upcoming_race)
+                self._enrich_upcoming_with_countdown(self._upcoming_race))
             images.insert(0, upcoming_card)
 
         return images if images else None
