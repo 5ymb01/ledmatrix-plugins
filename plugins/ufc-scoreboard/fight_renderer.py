@@ -164,10 +164,12 @@ class FightRenderer:
                     if img.mode != "RGBA":
                         img = img.convert("RGBA")
 
-                    # Scale headshot to fit display height
-                    max_width = int(self.display_width * 1.5)
-                    max_height = int(self.display_height * 1.5)
-                    img.thumbnail((max_width, max_height), LANCZOS)
+                    # Crop transparent padding then scale so ink fills display_height.
+                    # thumbnail into a display_height square box preserves aspect ratio.
+                    bbox = img.getbbox()
+                    if bbox:
+                        img = img.crop(bbox)
+                    img.thumbnail((self.display_height, self.display_height), LANCZOS)
                     img.load()  # Ensure pixel data is loaded before closing file
                 self._headshot_cache[fighter_id] = img
                 return img

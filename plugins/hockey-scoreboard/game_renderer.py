@@ -209,10 +209,13 @@ class GameRenderer:
                     else:
                         logo = logo_file.copy()
 
-                # Resize to fit display (after context manager closes file)
-                max_width = int(self.display_width * 1.5)
-                max_height = int(self.display_height * 1.5)
-                logo.thumbnail((max_width, max_height), RESAMPLE_FILTER)
+                # Crop transparent padding then scale so ink fills display_height.
+                # thumbnail into a display_height square box preserves aspect ratio
+                # and prevents wide logos from exceeding their half-card slot.
+                bbox = logo.getbbox()
+                if bbox:
+                    logo = logo.crop(bbox)
+                logo.thumbnail((self.display_height, self.display_height), RESAMPLE_FILTER)
 
                 self._logo_cache[cache_key] = logo
                 return logo
@@ -364,14 +367,17 @@ class GameRenderer:
 
         center_y = self.display_height // 2
 
-        # Draw logos (flush with card edges to avoid clipping in scroll/Vegas mode)
-        home_x = self.display_width - home_logo.width
-        home_y = center_y - (home_logo.height // 2)
-        main_img.paste(home_logo, (home_x, home_y), home_logo)
-
-        away_x = 0
+        # Draw logos — each centered within a slot on its side; cap at half the card
+        # width so home_slot_start stays non-negative on square/tall displays
+        logo_slot = min(self.display_height, self.display_width // 2)
+        away_x = (logo_slot - away_logo.width) // 2
         away_y = center_y - (away_logo.height // 2)
         main_img.paste(away_logo, (away_x, away_y), away_logo)
+
+        home_slot_start = self.display_width - logo_slot
+        home_x = home_slot_start + (logo_slot - home_logo.width) // 2
+        home_y = center_y - (home_logo.height // 2)
+        main_img.paste(home_logo, (home_x, home_y), home_logo)
 
         # Draw scores (centered) - only for live and recent games
         if game_type in ("live", "recent"):

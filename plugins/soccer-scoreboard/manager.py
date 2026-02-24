@@ -345,7 +345,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
         leagues_config = self.config.get('leagues', {})
         league_config = leagues_config.get(league_key, {})
         
-        self.logger.debug(f"DEBUG: league_config for {league_key} = {league_config}")
+        self.logger.debug(f"league_config for {league_key} = {league_config}")
 
         # Extract nested configurations
         display_modes_config = league_config.get("display_modes", {})
@@ -1684,7 +1684,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
             info = {
                 "plugin_id": self.plugin_id,
                 "name": "Soccer Scoreboard",
-                "version": "1.3.1",
+                "version": "1.4.0",
                 "enabled": self.is_enabled,
                 "display_size": f"{self.display_width}x{self.display_height}",
                 "leagues": league_info,

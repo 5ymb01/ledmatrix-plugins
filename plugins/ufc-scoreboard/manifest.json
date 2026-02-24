@@ -1,7 +1,7 @@
 {
   "id": "ufc-scoreboard",
   "name": "UFC Scoreboard",
-  "version": "1.1.1",
+  "version": "1.2.2",
   "author": "LegoGuy1000",
   "contributors": [
     {
@@ -14,7 +14,14 @@
   "entry_point": "manager.py",
   "description": "Live, recent, and upcoming UFC fights with fighter headshots, records, odds, and fight results. Based on original work by Alex Resnick (legoguy1000).",
   "category": "sports",
-  "tags": ["ufc", "mma", "fighting", "sports", "scoreboard", "live-scores"],
+  "tags": [
+    "ufc",
+    "mma",
+    "fighting",
+    "sports",
+    "scoreboard",
+    "live-scores"
+  ],
   "icon": "fas fa-fist-raised",
   "display_modes": [
     "ufc_live",
@@ -25,6 +32,21 @@
   "default_duration": 15,
   "config_schema": "config_schema.json",
   "versions": [
+    {
+      "version": "1.2.2",
+      "ledmatrix_min": "2.0.0",
+      "released": "2026-02-24"
+    },
+    {
+      "version": "1.2.1",
+      "ledmatrix_min": "2.0.0",
+      "released": "2026-02-24"
+    },
+    {
+      "version": "1.2.0",
+      "ledmatrix_min": "2.0.0",
+      "released": "2026-02-24"
+    },
     {
       "version": "1.1.1",
       "ledmatrix_min": "2.0.0",
@@ -47,7 +69,7 @@
       "released": "2026-02-12"
     }
   ],
-  "last_updated": "2026-02-15",
+  "last_updated": "2026-02-24",
   "stars": 0,
   "downloads": 0,
   "verified": true,
