@@ -59,6 +59,10 @@ class F1ScoreboardPlugin(BasePlugin):
         scroll_cfg = config.get("scroll", {}) if isinstance(config.get("scroll"), dict) else {}
         self._card_width = scroll_cfg.get("game_card_width", 128)
 
+        # Resolve timezone: plugin config → global config → UTC.
+        # Inject into config so the renderer can convert UTC API times to local.
+        config["timezone"] = self._resolve_timezone(config, cache_manager)
+
         # Initialize components
         self.logo_loader = F1LogoLoader()
         self.data_source = F1DataSource(cache_manager, config)
@@ -101,6 +105,19 @@ class F1ScoreboardPlugin(BasePlugin):
 
         self.logger.info("F1 Scoreboard initialized with %d modes: %s",
                         len(self.modes), ", ".join(self.modes))
+
+    def _resolve_timezone(self, config: Dict, cache_manager) -> str:
+        """Resolve timezone: plugin config → global config → UTC."""
+        tz = config.get("timezone")
+        if tz:
+            return tz
+        config_manager = getattr(cache_manager, "config_manager", None)
+        if config_manager is not None:
+            try:
+                tz = config_manager.get_timezone()
+            except (AttributeError, TypeError):
+                self.logger.debug("Global timezone unavailable; falling back to UTC")
+        return tz or "UTC"
 
     def _build_enabled_modes(self) -> List[str]:
         """Build list of enabled display modes from config."""
@@ -618,6 +635,9 @@ class F1ScoreboardPlugin(BasePlugin):
         self._update_interval = new_config.get("update_interval", 3600)
         self.display_duration = new_config.get("display_duration", 30)
         self.modes = self._build_enabled_modes()
+
+        # Re-resolve timezone in case global config changed.
+        new_config["timezone"] = self._resolve_timezone(new_config, self.cache_manager)
 
         # Force re-render with new settings
         scroll_cfg = new_config.get("scroll", {}) if isinstance(new_config.get("scroll"), dict) else {}
