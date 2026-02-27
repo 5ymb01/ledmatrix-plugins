@@ -27,7 +27,6 @@ This replaces the previous "sticky manager" approach which prevented league rota
 and made it difficult to ensure both leagues were displayed.
 """
 
-import logging
 import time
 from typing import Dict, Any, Set, Optional, Tuple, List
 
@@ -37,7 +36,10 @@ try:
     from src.plugin_system.base_plugin import BasePlugin, VegasDisplayMode
     from src.background_data_service import get_background_service
     from src.base_odds_manager import BaseOddsManager
+    from src.logging_config import get_logger
 except ImportError:
+    import logging
+    get_logger = logging.getLogger
     BasePlugin = None
     VegasDisplayMode = None
     get_background_service = None
@@ -59,7 +61,7 @@ except ImportError:
     ScrollDisplayManager = None
     SCROLL_AVAILABLE = False
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class FootballScoreboardPlugin(BasePlugin if BasePlugin else object):

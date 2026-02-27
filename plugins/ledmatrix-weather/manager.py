@@ -15,8 +15,9 @@ Features:
 API Version: 1.0.0
 """
 
-import logging
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 import time
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -49,9 +50,6 @@ try:
 except ImportError:
     def increment_api_counter(kind: str, count: int = 1):
         pass
-
-logger = logging.getLogger(__name__)
-
 
 class WeatherPlugin(BasePlugin):
     """
@@ -116,7 +114,19 @@ class WeatherPlugin(BasePlugin):
         self.error_log_throttle = 300  # Only log errors every 5 minutes
         self.last_error_log_time = 0
         self._last_error_hint = None  # Human-readable hint for diagnostic display
-        
+
+        # HTTP session with retry strategy for transient failures
+        self._session = requests.Session()
+        retry_strategy = Retry(
+            total=2,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self._session.mount("https://", adapter)
+        self._session.mount("http://", adapter)
+
         # State caching for display optimization
         self.last_weather_state = None
         self.last_hourly_state = None
@@ -265,10 +275,59 @@ class WeatherPlugin(BasePlugin):
         }
         return self._layout_cache
 
+    def on_config_change(self, new_config: Dict[str, Any]) -> None:
+        """Handle live configuration updates."""
+        self.config = new_config
+        self.api_key = new_config.get('api_key', self.api_key)
+        self.location = {
+            'city': new_config.get('location_city', self.location.get('city', 'Dallas')),
+            'state': new_config.get('location_state', self.location.get('state', 'Texas')),
+            'country': new_config.get('location_country', self.location.get('country', 'US')),
+        }
+        self.units = new_config.get('units', self.units)
+        self.show_current = new_config.get('show_current_weather', self.show_current)
+        self.show_hourly = new_config.get('show_hourly_forecast', self.show_hourly)
+        self.show_daily = new_config.get('show_daily_forecast', self.show_daily)
+
+        # Rebuild mode list and reset index so IndexError can't occur
+        self.modes = []
+        if self.show_current:
+            self.modes.append('weather')
+        if self.show_hourly:
+            self.modes.append('hourly_forecast')
+        if self.show_daily:
+            self.modes.append('daily_forecast')
+        if not self.modes:
+            self.modes = ['weather']
+        self.current_mode_index = 0
+        self.current_display_mode = None
+
+        # Invalidate layout cache so _get_layout() recomputes on next call.
+        # Using del instead of setting to None because _get_layout() checks
+        # hasattr() and would return None as a cache hit.
+        if hasattr(self, '_layout_cache'):
+            del self._layout_cache
+
+        # Force a fresh weather fetch on the next update() call by clearing
+        # cached data and resetting the update timer. This ensures location,
+        # units, or API key changes take effect immediately.
+        self.weather_data = None
+        self.forecast_data = None
+        self.hourly_forecast = None
+        self.daily_forecast = None
+        self.last_update = 0
+
+        # Reset display state caches so stale frames aren't reused
+        self.last_weather_state = None
+        self.last_hourly_state = None
+        self.last_daily_state = None
+
+        self.logger.info("Configuration updated — next update() will fetch fresh data")
+
     def update(self) -> None:
         """
         Update weather data from OpenWeatherMap API.
-        
+
         Fetches current conditions and forecast data, respecting
         update intervals and error backoff periods.
         """
@@ -317,8 +376,15 @@ class WeatherPlugin(BasePlugin):
     
     def _fetch_weather(self) -> None:
         """Fetch weather data from OpenWeatherMap API."""
+        self._last_error_hint = None  # Clear stale hint before fresh attempt
+
         # Check cache first - use update_interval as max_age to respect configured refresh rate
-        cache_key = 'weather'
+        city = self.location.get('city', 'Dallas')
+        state = self.location.get('state', 'Texas')
+        country = self.location.get('country', 'US')
+        # Include state, country, and units in cache key to avoid collisions
+        # when location or unit system changes (e.g., "Dallas,Texas,US" vs "Dallas,Oregon,US")
+        cache_key = f"{self.plugin_id}:{city}:{state}:{country}:{self.units}:weather"
         cached_data = self.cache_manager.get(cache_key, max_age=self.update_interval)
         if cached_data:
             self.weather_data = cached_data.get('current')
@@ -328,16 +394,11 @@ class WeatherPlugin(BasePlugin):
                 self.logger.info("Using cached weather data")
                 return
         
-        # Fetch fresh data
-        city = self.location.get('city', 'Dallas')
-        state = self.location.get('state', 'Texas')
-        country = self.location.get('country', 'US')
-        
         # Get coordinates using geocoding API
-        geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country}&limit=1&appid={self.api_key}"
+        geo_url = f"https://api.openweathermap.org/geo/1.0/direct?q={city},{state},{country}&limit=1&appid={self.api_key}"
 
         try:
-            response = requests.get(geo_url, timeout=10)
+            response = self._session.get(geo_url, timeout=10)
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             status = e.response.status_code if e.response is not None else None
@@ -353,6 +414,12 @@ class WeatherPlugin(BasePlugin):
             else:
                 self._last_error_hint = f"Geo API error {status}"
                 self.logger.error(f"Geocoding API HTTP error {status}: {e}")
+            raise
+        except requests.exceptions.ConnectionError:
+            self._last_error_hint = "Connection failed"
+            raise
+        except requests.exceptions.Timeout:
+            self._last_error_hint = "API timed out"
             raise
         geo_data = response.json()
         
@@ -372,7 +439,7 @@ class WeatherPlugin(BasePlugin):
         one_call_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely,alerts&appid={self.api_key}&units={self.units}"
 
         try:
-            response = requests.get(one_call_url, timeout=10)
+            response = self._session.get(one_call_url, timeout=10)
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             status = e.response.status_code if e.response is not None else None
@@ -390,6 +457,12 @@ class WeatherPlugin(BasePlugin):
             else:
                 self._last_error_hint = f"Weather API error {status}"
                 self.logger.error(f"One Call API HTTP error {status}: {e}")
+            raise
+        except requests.exceptions.ConnectionError:
+            self._last_error_hint = "Connection failed"
+            raise
+        except requests.exceptions.Timeout:
+            self._last_error_hint = "API timed out"
             raise
         one_call_data = response.json()
         
@@ -481,7 +554,7 @@ class WeatherPlugin(BasePlugin):
                 'icon': icon_code
             })
     
-    def display(self, display_mode: str = None, force_clear: bool = False) -> None:
+    def display(self, force_clear: bool = False, display_mode: Optional[str] = None) -> None:
         """
         Display weather information with internal mode cycling.
         
@@ -918,15 +991,15 @@ class WeatherPlugin(BasePlugin):
 
     def display_weather(self, force_clear: bool = False) -> None:
         """Display current weather (compatibility method for display controller)."""
-        self.display('weather', force_clear)
-    
+        self.display(force_clear=force_clear, display_mode='weather')
+
     def display_hourly_forecast(self, force_clear: bool = False) -> None:
         """Display hourly forecast (compatibility method for display controller)."""
-        self.display('hourly_forecast', force_clear)
-    
+        self.display(force_clear=force_clear, display_mode='hourly_forecast')
+
     def display_daily_forecast(self, force_clear: bool = False) -> None:
         """Display daily forecast (compatibility method for display controller)."""
-        self.display('daily_forecast', force_clear)
+        self.display(force_clear=force_clear, display_mode='daily_forecast')
 
     def get_info(self) -> Dict[str, Any]:
         """Return plugin info for web UI."""
@@ -947,6 +1020,8 @@ class WeatherPlugin(BasePlugin):
 
     def cleanup(self) -> None:
         """Cleanup resources."""
+        if hasattr(self, '_session'):
+            self._session.close()
         self.weather_data = None
         self.forecast_data = None
         self.logger.info("Weather plugin cleaned up")

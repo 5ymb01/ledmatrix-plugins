@@ -14,7 +14,6 @@ Features:
 API Version: 1.0.0
 """
 
-import logging
 import os
 import time
 import uuid
@@ -23,8 +22,9 @@ from PIL import Image
 from pathlib import Path
 
 from src.plugin_system.base_plugin import BasePlugin
+from src.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class StaticImagePlugin(BasePlugin):
@@ -957,7 +957,7 @@ class StaticImagePlugin(BasePlugin):
 
                 try:
                     font = ImageFont.truetype('assets/fonts/4x6-font.ttf', 8)
-                except:
+                except OSError:
                     font = ImageFont.load_default()
 
                 draw.text((5, 12), "Image", font=font, fill=(200, 0, 0))

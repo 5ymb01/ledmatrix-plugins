@@ -1,11 +1,18 @@
 {
   "id": "news",
   "name": "News Ticker",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Displays scrolling news headlines from RSS feeds including sports news from ESPN, NCAA updates, and custom RSS sources",
   "author": "ChuckBuilds",
   "category": "content",
-  "tags": ["news", "headlines", "rss", "sports", "ticker", "scrolling"],
+  "tags": [
+    "news",
+    "headlines",
+    "rss",
+    "sports",
+    "ticker",
+    "scrolling"
+  ],
   "entry_point": "manager.py",
   "class_name": "NewsTickerPlugin",
   "config_schema": "config_schema.json",
@@ -13,6 +20,11 @@
   "branch": "main",
   "plugin_path": "plugins/news",
   "versions": [
+    {
+      "released": "2026-02-26",
+      "version": "1.0.5",
+      "ledmatrix_min": "2.0.0"
+    },
     {
       "version": "1.0.4",
       "ledmatrix_min": "2.0.0",
@@ -31,7 +43,7 @@
   ],
   "stars": 0,
   "downloads": 0,
-  "last_updated": "2026-02-17",
+  "last_updated": "2026-02-26",
   "verified": true,
   "screenshot": "",
   "display_modes": [

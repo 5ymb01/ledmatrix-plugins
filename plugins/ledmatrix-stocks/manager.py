@@ -34,23 +34,19 @@ class StockTickerPlugin(BasePlugin):
         """Initialize the stock ticker plugin."""
         super().__init__(plugin_id, config, display_manager, cache_manager, plugin_manager)
         
-        # Get display dimensions
-        self.display_width = display_manager.width
-        self.display_height = display_manager.height
-        
         # Initialize modular components
         self.config_manager = StockConfigManager(config, self.logger)
         self.data_fetcher = StockDataFetcher(self.config_manager, self.cache_manager, self.logger)
         self.display_renderer = StockDisplayRenderer(
-            self.config_manager.plugin_config, 
-            self.display_width, 
-            self.display_height, 
+            self.config_manager.plugin_config,
+            display_manager.matrix.width,
+            display_manager.matrix.height,
             self.logger
         )
         self.chart_renderer = StockChartRenderer(
             self.config_manager.plugin_config,
-            self.display_width,
-            self.display_height,
+            display_manager.matrix.width,
+            display_manager.matrix.height,
             self.logger
         )
         
@@ -81,8 +77,14 @@ class StockTickerPlugin(BasePlugin):
             buffer=self.config_manager.duration_buffer
         )
         
-        self.logger.info("Stock ticker plugin initialized - %dx%d", 
-                        self.display_width, self.display_height)
+        # Timestamp for static mode rotation (avoids blocking sleep).
+        # Initialize to current time so the first stock displays for the
+        # full interval instead of rotating immediately.
+        self._last_static_switch: float = time.time()
+        self._static_display_seconds: float = 2.0
+
+        self.logger.info("Stock ticker plugin initialized - %dx%d",
+                         self.display_manager.matrix.width, self.display_manager.matrix.height)
     
     def update(self) -> None:
         """Update stock and crypto data."""
@@ -96,15 +98,11 @@ class StockTickerPlugin(BasePlugin):
                 self.stock_data = fetched_data
                 self.last_update_time = current_time
                 
-                # Clear scroll cache when data updates
-                if hasattr(self.scroll_helper, 'cached_image'):
-                    self.scroll_helper.cached_image = None
-                
-                
+                # Clear scroll cache and reset scroll state when data updates
+                self.scroll_helper.clear_cache()
+
             except Exception as e:
-                import traceback
-                self.logger.error("Error updating stock/crypto data: %s", e)
-                self.logger.debug("Traceback: %s", traceback.format_exc())
+                self.logger.exception("Error updating stock/crypto data: %s", e)
     
     def display(self, force_clear: bool = False) -> None:
         """Display stocks with scrolling or static mode."""
@@ -146,12 +144,8 @@ class StockTickerPlugin(BasePlugin):
         # Log frame rate (less frequently to avoid spam)
         self.scroll_helper.log_frame_rate()
         
-        # Check if scroll is complete using ScrollHelper's method
-        if hasattr(self.scroll_helper, 'is_scroll_complete'):
-            self.scroll_complete = self.scroll_helper.is_scroll_complete()
-        elif self.scroll_helper.scroll_position == 0 and self._has_scrolled:
-            # Fallback: check if we've wrapped around (position is 0 after scrolling)
-            self.scroll_complete = True
+        # Check if scroll is complete
+        self.scroll_complete = self.scroll_helper.is_scroll_complete()
     
     def _display_static(self, force_clear: bool = False) -> None:
         """Display stocks in static mode - one at a time without scrolling."""
@@ -173,10 +167,12 @@ class StockTickerPlugin(BasePlugin):
         # Update display - paste overwrites previous content (no need to clear)
         self.display_manager.image.paste(static_image, (0, 0))
         self.display_manager.update_display()
-        
-        # Move to next stock after a delay
-        time.sleep(2)  # Show each stock for 2 seconds
-        self.current_stock_index += 1
+
+        # Advance to next stock after the display interval without blocking
+        now = time.time()
+        if now - self._last_static_switch >= self._static_display_seconds:
+            self.current_stock_index += 1
+            self._last_static_switch = now
     
     def _create_scrolling_display(self):
         """Create the wide scrolling image with all stocks."""
@@ -195,21 +191,19 @@ class StockTickerPlugin(BasePlugin):
                 self.scroll_helper.clear_cache()
             
         except Exception as e:
-            import traceback
-            self.logger.error("Error creating scrolling display: %s", e)
-            self.logger.error("Traceback: %s", traceback.format_exc())
+            self.logger.exception("Error creating scrolling display: %s", e)
             self.scroll_helper.clear_cache()
     
     def _show_error_state(self):
         """Show error state when no data is available."""
         try:
-            error_image = self.display_renderer._create_error_display()
+            error_image = self.display_renderer.create_error_display()
             self.display_manager.image.paste(error_image, (0, 0))
             self.display_manager.update_display()
         except Exception as e:
-            self.logger.error("Error showing error state: %s", e)
+            self.logger.exception("Error showing error state: %s", e)
     
-    def get_cycle_duration(self, display_mode: str = None) -> Optional[float]:
+    def get_cycle_duration(self, display_mode: Optional[str] = None) -> Optional[float]:
         """
         Calculate the expected cycle duration based on content width and scroll speed.
         
@@ -230,7 +224,7 @@ class StockTickerPlugin(BasePlugin):
             return None
         
         # Check if we have a cached image with calculated duration
-        if self.scroll_helper and self.scroll_helper.cached_image:
+        if self.scroll_helper.cached_image:
             try:
                 dynamic_duration = self.scroll_helper.get_dynamic_duration()
                 if dynamic_duration and dynamic_duration > 0:
@@ -257,9 +251,8 @@ class StockTickerPlugin(BasePlugin):
         use that. Otherwise use the static display_duration.
         """
         # If dynamic duration is enabled and scroll helper has calculated a duration, use it
-        if (self.config_manager.dynamic_duration and 
-            hasattr(self.scroll_helper, 'calculated_duration') and 
-            self.scroll_helper.calculated_duration > 0):
+        if (self.config_manager.dynamic_duration and
+                self.scroll_helper.calculated_duration > 0):
             return float(self.scroll_helper.calculated_duration)
         
         # Otherwise use static duration
@@ -310,11 +303,7 @@ class StockTickerPlugin(BasePlugin):
             return self.current_stock_index >= len(symbols)
         
         # For scrolling mode, check if scroll has completed
-        if hasattr(self.scroll_helper, 'is_scroll_complete'):
-            return self.scroll_helper.is_scroll_complete()
-        
-        # Fallback: check if scroll position has wrapped around
-        return self.scroll_complete
+        return self.scroll_helper.is_scroll_complete()
     
     def reset_cycle_state(self) -> None:
         """
@@ -327,8 +316,7 @@ class StockTickerPlugin(BasePlugin):
         self.scroll_complete = False
         self.current_stock_index = 0
         self._has_scrolled = False
-        if hasattr(self.scroll_helper, 'reset_scroll'):
-            self.scroll_helper.reset_scroll()
+        self.scroll_helper.reset_scroll()
     
     def get_info(self) -> Dict[str, Any]:
         """Get plugin information."""
@@ -339,6 +327,11 @@ class StockTickerPlugin(BasePlugin):
         """Set whether to show mini charts."""
         self.config_manager.set_toggle_chart(enabled)
         self.display_renderer.set_toggle_chart(enabled)
+
+    def set_layout_preset(self, preset: str) -> None:
+        """Set the display layout preset (single, dual, quad)."""
+        self.config_manager.set_layout_preset(preset)
+        self.display_renderer.set_layout_preset(preset)
     
     def set_scroll_speed(self, speed: float) -> None:
         """Set the scroll speed (pixels per frame)."""
@@ -373,6 +366,52 @@ class StockTickerPlugin(BasePlugin):
             
         return True
 
+    def on_config_change(self, new_config: Dict[str, Any]) -> None:
+        """Reload all config-derived attributes when settings change via web UI."""
+        super().on_config_change(new_config)
+
+        # Reload config_manager with new settings
+        self.config_manager.on_config_change(new_config)
+
+        # Recreate the display renderer so that all init-time derived state
+        # (colors, fonts, layout) is rebuilt from the new config.
+        self.display_renderer = StockDisplayRenderer(
+            self.config_manager.plugin_config,
+            self.display_manager.matrix.width,
+            self.display_manager.matrix.height,
+            self.logger,
+        )
+
+        # Update other components with new config
+        self.chart_renderer.config = self.config_manager.plugin_config
+        self.data_fetcher.config = self.config_manager.plugin_config
+
+        # Sync the enable_scrolling flag
+        self.enable_scrolling = self.config_manager.enable_scrolling
+
+        # Reinitialize scroll helper from the new renderer and reapply settings
+        self.scroll_helper = self.display_renderer.get_scroll_helper()
+        pixels_per_second = (
+            self.config_manager.scroll_speed / self.config_manager.scroll_delay
+            if self.config_manager.scroll_delay > 0
+            else self.config_manager.scroll_speed * 100
+        )
+        self.scroll_helper.set_scroll_speed(pixels_per_second)
+        self.scroll_helper.set_scroll_delay(self.config_manager.scroll_delay)
+        self.scroll_helper.set_dynamic_duration_settings(
+            enabled=self.config_manager.dynamic_duration,
+            min_duration=int(self.config_manager.min_duration),
+            max_duration=int(self.config_manager.max_duration),
+            buffer=self.config_manager.duration_buffer,
+        )
+
+        self.logger.info(
+            "Stock ticker config reloaded: layout=%s, chart=%s, scroll_speed=%.1f",
+            self.config_manager.layout_preset,
+            self.config_manager.toggle_chart,
+            self.config_manager.scroll_speed,
+        )
+
     def reload_config(self) -> None:
         """Reload configuration."""
         self.config_manager.reload_config()
@@ -388,4 +427,4 @@ class StockTickerPlugin(BasePlugin):
                 self.data_fetcher.cleanup()
             self.logger.info("Stock ticker plugin cleanup completed")
         except Exception as e:
-            self.logger.error("Error during cleanup: %s", e)
+            self.logger.exception("Error during cleanup: %s", e)

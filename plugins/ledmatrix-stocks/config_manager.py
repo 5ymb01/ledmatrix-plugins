@@ -36,6 +36,7 @@ class StockConfigManager:
         self.scroll_delay = 0.02  # Seconds between frames (default 0.02)
         self.enable_scrolling = True
         self.toggle_chart = False
+        self.layout_preset = 'single'
         self.dynamic_duration = True
         self.min_duration = 30
         self.max_duration = 300
@@ -71,6 +72,12 @@ class StockConfigManager:
         self.retry_count = 3
         self.rate_limit_delay = 0.1
     
+    def on_config_change(self, new_config: Dict[str, Any]) -> None:
+        """Update configuration and reload all derived attributes."""
+        self.config = new_config
+        self.plugin_config = new_config
+        self._load_config()
+
     def _load_config(self) -> None:
         """Load and validate configuration."""
         try:
@@ -86,7 +93,8 @@ class StockConfigManager:
                 # New format - read from display section
                 self.scroll_speed = display_config.get('scroll_speed', 1.0)
                 self.scroll_delay = display_config.get('scroll_delay', 0.02)
-                self.toggle_chart = display_config.get('toggle_chart', True)
+                self.toggle_chart = display_config.get('toggle_chart', False)
+                self.layout_preset = display_config.get('layout_preset', 'single')
                 self.dynamic_duration = display_config.get('dynamic_duration', True)
                 self.min_duration = display_config.get('min_duration', 30)
                 self.max_duration = display_config.get('max_duration', 300)
@@ -192,6 +200,7 @@ class StockConfigManager:
         self.scroll_delay = 0.02
         self.enable_scrolling = True
         self.toggle_chart = False
+        self.layout_preset = 'single'
         self.dynamic_duration = True
         self.min_duration = 30
         self.max_duration = 300
@@ -240,6 +249,11 @@ class StockConfigManager:
         """Set whether to show mini charts."""
         self.toggle_chart = enabled
         self.logger.debug("Chart toggle set to: %s", enabled)
+
+    def set_layout_preset(self, preset: str) -> None:
+        """Set the display layout preset (single, dual, quad)."""
+        self.layout_preset = preset
+        self.logger.debug("Layout preset set to: %s", preset)
     
     def set_scroll_speed(self, speed: float) -> None:
         """Set the scroll speed (pixels per frame, 0.5-5.0)."""
@@ -265,6 +279,7 @@ class StockConfigManager:
             'enabled': self.enabled,
             'scrolling': self.enable_scrolling,
             'chart_enabled': self.toggle_chart,
+            'layout_preset': self.layout_preset,
             'stocks_enabled': self.stocks_enabled,
             'stocks_count': len(self.stock_symbols),
             'crypto_count': len(self.crypto_symbols),

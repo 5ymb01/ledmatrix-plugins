@@ -16,7 +16,6 @@ Features:
 API Version: 1.0.0
 """
 
-import logging
 import time
 import requests
 import xml.etree.ElementTree as ET
@@ -31,8 +30,9 @@ from PIL import Image, ImageDraw, ImageFont
 from src.plugin_system.base_plugin import BasePlugin
 from src.common.scroll_helper import ScrollHelper
 from src.common.logo_helper import LogoHelper
+from src.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class NewsTickerPlugin(BasePlugin):

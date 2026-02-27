@@ -14,7 +14,6 @@ Features:
 API Version: 1.0.0
 """
 
-import logging
 import os
 import time
 from typing import Dict, Any
@@ -23,8 +22,9 @@ from pathlib import Path
 
 from src.plugin_system.base_plugin import BasePlugin
 from src.common.scroll_helper import ScrollHelper
+from src.logging_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TextDisplayPlugin(BasePlugin):
