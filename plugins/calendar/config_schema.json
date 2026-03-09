@@ -23,12 +23,13 @@
     },
     "calendars": {
       "type": "array",
+      "x-widget": "google-calendar-picker",
       "items": {
         "type": "string"
       },
       "minItems": 1,
       "default": ["primary"],
-      "description": "List of calendar IDs to fetch events from (use 'primary' for default calendar)"
+      "description": "Calendar IDs to display events from. Click 'Load My Calendars' to select from your Google account."
     },
     "credentials_file": {
       "type": "string",

@@ -369,7 +369,36 @@ class CalendarPlugin(BasePlugin):
         except Exception as e:
             self.logger.error(f"Error building calendar service: {e}")
             return False
-    
+
+    def get_calendars(self) -> List[Dict[str, Any]]:
+        """Return available Google calendars for UI selection widgets."""
+        if not self.service:
+            return []
+
+        try:
+            calendars = []
+            page_token = None
+            while True:
+                response = self.service.calendarList().list(
+                    pageToken=page_token
+                ).execute()
+                calendars.extend(response.get("items", []))
+                page_token = response.get("nextPageToken")
+                if not page_token:
+                    break
+            return [
+                {
+                    "id": cal.get("id", ""),
+                    "summary": cal.get("summary", "Unnamed Calendar"),
+                    "primary": cal.get("primary", False),
+                }
+                for cal in calendars
+                if cal.get("id")
+            ]
+        except Exception:
+            self.logger.exception("Failed to fetch calendar list")
+            return []
+
     def update(self) -> None:
         """
         Fetch upcoming calendar events.
@@ -415,8 +444,11 @@ class CalendarPlugin(BasePlugin):
                     
                     self.logger.info(f"Fetched {len(events)} events from calendar: {calendar_id}")
                 
-                except Exception as e:
-                    self.logger.error(f"Error fetching events from {calendar_id}: {e}")
+                except Exception:
+                    self.logger.exception(
+                        "Error fetching events from calendar '%s' - verify this calendar ID is correct and accessible under your Google account",
+                        calendar_id,
+                    )
                     continue
             
             # Sort all events by start time

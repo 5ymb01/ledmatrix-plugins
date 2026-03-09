@@ -117,6 +117,10 @@ class F1ScoreboardPlugin(BasePlugin):
                 tz = config_manager.get_timezone()
             except (AttributeError, TypeError):
                 self.logger.debug("Global timezone unavailable; falling back to UTC")
+            except Exception:
+                self.logger.exception(
+                    "Failed to read global timezone from config_manager.get_timezone(); falling back to UTC."
+                )
         return tz or "UTC"
 
     def _build_enabled_modes(self) -> List[str]:
