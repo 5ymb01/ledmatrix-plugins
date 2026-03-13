@@ -50,13 +50,13 @@ class NewsTickerPlugin(BasePlugin):
 
     # Default RSS feeds
     DEFAULT_FEEDS = {
-        'MLB': 'http://espn.com/espn/rss/mlb/news',
-        'NFL': 'http://espn.go.com/espn/rss/nfl/news',
+        'MLB': 'https://www.espn.com/espn/rss/mlb/news',
+        'NFL': 'https://www.espn.com/espn/rss/nfl/news',
         'NCAA FB': 'https://www.espn.com/espn/rss/ncf/news',
         'NHL': 'https://www.espn.com/espn/rss/nhl/news',
         'NBA': 'https://www.espn.com/espn/rss/nba/news',
         'TOP SPORTS': 'https://www.espn.com/espn/rss/news',
-        'BIG10': 'https://www.espn.com/blog/feed?blog=bigten',
+        'BIG10': 'https://www.espn.com/espn/rss/ncf/news',
         'NCAA': 'https://www.espn.com/espn/rss/ncaa/news',
         'Other': 'https://www.coveringthecorner.com/rss/current.xml'
     }
