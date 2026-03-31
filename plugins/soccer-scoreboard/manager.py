@@ -62,6 +62,7 @@ from soccer_managers import (
     create_mls_managers,
     create_champions_league_managers,
     create_europa_league_managers,
+    create_liga_portugal_managers,
     create_custom_league_managers,
 )
 
@@ -69,7 +70,7 @@ logger = logging.getLogger(__name__)
 
 # Predefined league keys and display names (priority 1-8)
 # Custom leagues will be added dynamically with user-defined priorities
-PREDEFINED_LEAGUE_KEYS = ['eng.1', 'esp.1', 'ger.1', 'ita.1', 'fra.1', 'usa.1', 'uefa.champions', 'uefa.europa']
+PREDEFINED_LEAGUE_KEYS = ['eng.1', 'esp.1', 'ger.1', 'ita.1', 'fra.1', 'usa.1', 'por.1', 'uefa.champions', 'uefa.europa']
 PREDEFINED_LEAGUE_NAMES = {
     'eng.1': 'Premier League',
     'esp.1': 'La Liga',
@@ -77,6 +78,7 @@ PREDEFINED_LEAGUE_NAMES = {
     'ita.1': 'Serie A',
     'fra.1': 'Ligue 1',
     'usa.1': 'MLS',
+    'por.1': 'Liga Portugal',
     'uefa.champions': 'Champions League',
     'uefa.europa': 'Europa League'
 }
@@ -89,8 +91,9 @@ PREDEFINED_LEAGUE_PRIORITIES = {
     'ita.1': 4,
     'fra.1': 5,
     'usa.1': 6,
-    'uefa.champions': 7,
-    'uefa.europa': 8,
+    'por.1': 7,
+    'uefa.champions': 8,
+    'uefa.europa': 9,
 }
 
 # League key -> (live_attr, recent_attr, upcoming_attr) for predefined leagues
@@ -101,6 +104,7 @@ PREDEFINED_LEAGUE_ATTR_MAP = {
     'ita.1': ('ita1_live', 'ita1_recent', 'ita1_upcoming'),
     'fra.1': ('fra1_live', 'fra1_recent', 'fra1_upcoming'),
     'usa.1': ('usa1_live', 'usa1_recent', 'usa1_upcoming'),
+    'por.1': ('por1_live', 'por1_recent', 'por1_upcoming'),
     'uefa.champions': ('champions_live', 'champions_recent', 'champions_upcoming'),
     'uefa.europa': ('europa_live', 'europa_recent', 'europa_upcoming'),
 }
@@ -199,6 +203,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
 
         # Load and initialize custom leagues from config
         self._load_custom_leagues()
+        self._build_custom_league_map()
 
         # Initialize league registry after managers are created
         # This centralizes league management and makes it easy to add more leagues
@@ -327,6 +332,10 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
                     self.usa1_live, self.usa1_recent, self.usa1_upcoming = create_mls_managers(
                         league_config, self.display_manager, self.cache_manager
                     )
+                elif league_key == 'por.1':
+                    self.por1_live, self.por1_recent, self.por1_upcoming = create_liga_portugal_managers(
+                        league_config, self.display_manager, self.cache_manager
+                    )
                 elif league_key == 'uefa.champions':
                     self.champions_live, self.champions_recent, self.champions_upcoming = create_champions_league_managers(
                         league_config, self.display_manager, self.cache_manager
@@ -425,6 +434,25 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
         self.logger.debug(f"Using timezone: {timezone_str} for {league_key} managers")
 
         return manager_config
+
+    def _build_custom_league_map(self) -> None:
+        """Build O(1) lookup map from custom_leagues config, keyed by league_code."""
+        self._custom_league_map: Dict[str, Dict] = {
+            cl['league_code']: cl
+            for cl in self.config.get('custom_leagues', [])
+            if cl.get('league_code')
+        }
+
+    def _get_league_config(self, league_key: str, league_data: Optional[Dict] = None) -> Dict:
+        """Get the config dict for a league, handling both predefined and custom leagues."""
+        if league_data is None:
+            league_data = self._league_registry.get(league_key, {})
+
+        if league_data.get('is_custom', False):
+            return self._custom_league_map.get(league_key, {})
+        else:
+            leagues_config = self.config.get('leagues', {})
+            return leagues_config.get(league_key, {})
 
     def _load_custom_leagues(self) -> None:
         """
@@ -749,18 +777,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
 
             # Check if this mode type is enabled for this league
             # Get the league config to check display_modes settings
-            if league_data.get('is_custom', False):
-                # Custom league - check from custom_leagues config
-                leagues_config = self.config.get('leagues', {})
-                custom_leagues = leagues_config.get('custom_leagues', [])
-                league_config = next(
-                    (cl for cl in custom_leagues if cl.get('league_code') == league_id),
-                    {}
-                )
-            else:
-                # Predefined league
-                leagues_config = self.config.get('leagues', {})
-                league_config = leagues_config.get(league_id, {})
+            league_config = self._get_league_config(league_id, league_data)
 
             display_modes_config = league_config.get("display_modes", {})
 
@@ -915,7 +932,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
             self.logger.debug(f"Display mode settings for {LEAGUE_NAMES.get(league_key, league_key)}: {settings[league_key]}")
 
         # Parse custom leagues
-        custom_leagues = leagues_config.get('custom_leagues', [])
+        custom_leagues = self.config.get('custom_leagues', [])
         for custom_league in custom_leagues:
             league_code = custom_league.get('league_code', '')
             if not league_code:
@@ -1112,16 +1129,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
             if not league_data.get('enabled', False):
                 continue
 
-            if league_data.get('is_custom', False):
-                leagues_config = self.config.get('leagues', {})
-                custom_leagues = leagues_config.get('custom_leagues', [])
-                league_config = next(
-                    (cl for cl in custom_leagues if cl.get('league_code') == league_key),
-                    {}
-                )
-            else:
-                leagues_config = self.config.get('leagues', {})
-                league_config = leagues_config.get(league_key, {})
+            league_config = self._get_league_config(league_key, league_data)
 
             display_modes = league_config.get("display_modes", {})
 
@@ -1201,6 +1209,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
             # Reinitialize managers and modes
             self._initialize_managers()
             self._load_custom_leagues()
+            self._build_custom_league_map()
             self._initialize_league_registry()
             self._display_mode_settings = self._parse_display_mode_settings()
             self.modes = self._get_available_modes()
@@ -1778,7 +1787,7 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
             info = {
                 "plugin_id": self.plugin_id,
                 "name": "Soccer Scoreboard",
-                "version": "1.4.0",
+                "version": "1.6.0",
                 "enabled": self.is_enabled,
                 "display_size": f"{self.display_width}x{self.display_height}",
                 "leagues": league_info,
@@ -1851,21 +1860,20 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
         mode_type = self._current_display_mode_type
         
         # Check per-league/per-mode setting first (most specific)
-        leagues_config = self.config.get('leagues', {})
-        league_config = leagues_config.get(league_key, {})
+        league_config = self._get_league_config(league_key)
         league_dynamic = league_config.get("dynamic_duration", {})
         league_modes = league_dynamic.get("modes", {})
         mode_config = league_modes.get(mode_type, {})
         if "enabled" in mode_config:
             return bool(mode_config.get("enabled", False))
-        
+
         # Check per-league setting
         if "enabled" in league_dynamic:
             return bool(league_dynamic.get("enabled", False))
-        
+
         # No global fallback - return False
         return False
-    
+
     def get_dynamic_duration_cap(self) -> Optional[float]:
         """
         Get dynamic duration cap for the current display context.
@@ -1873,19 +1881,18 @@ class SoccerScoreboardPlugin(BasePlugin if BasePlugin else object):
         """
         if not self.is_enabled:
             return None
-        
+
         # If no current display context, check global setting
         if not self._current_display_league or not self._current_display_mode_type:
             if BasePlugin:
                 return super().get_dynamic_duration_cap()
             return None
-        
+
         league_key = self._current_display_league
         mode_type = self._current_display_mode_type
-        
+
         # Check per-league/per-mode setting first (most specific)
-        leagues_config = self.config.get('leagues', {})
-        league_config = leagues_config.get(league_key, {})
+        league_config = self._get_league_config(league_key)
         league_dynamic = league_config.get("dynamic_duration", {})
         league_modes = league_dynamic.get("modes", {})
         mode_config = league_modes.get(mode_type, {})
