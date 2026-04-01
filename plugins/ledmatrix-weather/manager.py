@@ -776,7 +776,7 @@ class WeatherPlugin(BasePlugin):
 
             all_items = []  # list of (text, color)
 
-            # Row 1 items (always shown)
+            # Core items (always shown)
             uv_color = self._get_uv_color(uv_index)
             all_items.append((f"UV:{uv_index:.0f}", uv_color))
             all_items.append((f"H:{humidity}%", self.COLORS['dim']))
@@ -785,41 +785,29 @@ class WeatherPlugin(BasePlugin):
             else:
                 all_items.append((f"W:{wind_speed:.0f}{wind_dir}", self.COLORS['dim']))
 
-            # Row 2 items (only on tall displays)
-            row2_items = []
-            if height >= 48:
-                if self.show_feels_like and feels_like is not None:
-                    row2_items.append((f"FL:{int(feels_like)}\u00b0", self.COLORS['dim']))
-                if self.show_dew_point and dew_point is not None:
-                    row2_items.append((f"Dew:{int(dew_point)}\u00b0", self.COLORS['dim']))
-                if self.show_visibility and visibility_m is not None:
-                    vis_val = visibility_m / 1609.34 if self.units == 'imperial' else visibility_m / 1000
-                    vis_u = "mi" if self.units == 'imperial' else "km"
-                    row2_items.append((f"Vis:{vis_val:.0f}{vis_u}", self.COLORS['dim']))
-                if self.show_pressure and pressure is not None:
-                    if self.units == 'imperial':
-                        pv = pressure * 0.02953
-                        row2_items.append((f"P:{pv:.2f}\"", self.COLORS['dim']))
-                    else:
-                        row2_items.append((f"P:{int(pressure)}hPa", self.COLORS['dim']))
+            # Extra items — merged into same row (no degree symbol, font can't render it)
+            if self.show_feels_like and feels_like is not None:
+                all_items.append((f"FL:{int(feels_like)}", self.COLORS['dim']))
+            if self.show_dew_point and dew_point is not None:
+                all_items.append((f"Dew:{int(dew_point)}", self.COLORS['dim']))
+            if self.show_visibility and visibility_m is not None:
+                vis_val = visibility_m / 1609.34 if self.units == 'imperial' else visibility_m / 1000
+                vis_u = "mi" if self.units == 'imperial' else "km"
+                all_items.append((f"Vis:{vis_val:.0f}{vis_u}", self.COLORS['dim']))
+            if self.show_pressure and pressure is not None:
+                if self.units == 'imperial':
+                    pv = pressure * 0.02953
+                    all_items.append((f"P:{pv:.2f}\"", self.COLORS['dim']))
+                else:
+                    all_items.append((f"P:{int(pressure)}hPa", self.COLORS['dim']))
 
-            def _draw_bar(items, y_row):
-                """Draw a row of items evenly distributed across the display width."""
-                if not items:
-                    return
-                sec_w = width // len(items)
-                for i, (text, color) in enumerate(items):
+            # Single bottom bar with all items
+            if all_items:
+                sec_w = width // len(all_items)
+                for i, (text, color) in enumerate(all_items):
                     tw = draw.textlength(text, font=font)
                     x = i * sec_w + (sec_w - tw) // 2
-                    draw.text((max(0, x), y_row), text, font=font, fill=color)
-
-            if row2_items:
-                # Two rows: row2 above, row1 at bottom
-                _draw_bar(row2_items, layout['bottom_bar_y'] - extra_small_h - 1)
-                _draw_bar(all_items, layout['bottom_bar_y'])
-            else:
-                # Single row at bottom
-                _draw_bar(all_items, layout['bottom_bar_y'])
+                    draw.text((max(0, x), layout['bottom_bar_y']), text, font=font, fill=color)
 
             return img
         except Exception as e:
@@ -1106,8 +1094,10 @@ class WeatherPlugin(BasePlugin):
             img = Image.new('RGB', (width, height), (0, 0, 0))
             draw = ImageDraw.Draw(img)
 
-            font = self.display_manager.extra_small_font
-            font_h = 7
+            font = self.display_manager.small_font          # 8px - main text
+            font_sm = self.display_manager.extra_small_font  # 6px - secondary
+            font_h = 9   # line height for small_font
+            font_sm_h = 7  # line height for extra_small_font
             tz_offset = self.weather_data.get('timezone_offset', 0) if self.weather_data else 0
             sun = self.weather_data.get('sun', {}) if self.weather_data else {}
             moon = self.weather_data.get('moon', {}) if self.weather_data else {}
@@ -1130,13 +1120,12 @@ class WeatherPlugin(BasePlugin):
                 diff = sunset_ts - sunrise_ts
                 dh = int(diff // 3600)
                 dm = int((diff % 3600) // 60)
-                day_len = f"{dh}h {dm}m"
+                day_len = f"{dh}h{dm}m"
 
-            # Moon phase icon (left side)
+            # Moon phase icon (left side) — use most of the height
             moon_icon_code = self._get_moon_icon_code(moon_phase)
-            icon_size = max(14, min(height - 4, 40))
+            icon_size = height - 6
 
-            # Try to load moon icon
             try:
                 moon_icon = WeatherIcons.load_weather_icon(moon_icon_code, icon_size)
                 if moon_icon:
@@ -1145,36 +1134,35 @@ class WeatherPlugin(BasePlugin):
             except Exception:
                 pass
 
-            # Text on the right side
-            text_x = icon_size + 6
-            y = max(1, (height - font_h * 4 - 4) // 2)
+            # Text area starts after the icon
+            text_x = icon_size + 8
+            text_w = width - text_x - 2
 
-            # Row 1: Sunrise / Sunset
-            draw.text((text_x, y), f"Rise {sunrise}", font=font, fill=(255, 200, 0))
-            set_text = f"Set {sunset}"
-            set_w = draw.textlength(set_text, font=font)
-            draw.text((width - set_w - 2, y), set_text, font=font, fill=(255, 120, 50))
-            y += font_h + 1
-
-            # Row 2: Moonrise / Moonset
-            draw.text((text_x, y), f"MR {moonrise}", font=font, fill=(180, 180, 220))
-            ms_text = f"MS {moonset}"
-            ms_w = draw.textlength(ms_text, font=font)
-            draw.text((width - ms_w - 2, y), ms_text, font=font, fill=(140, 140, 180))
-            y += font_h + 1
-
-            # Row 3: Moon phase name
-            draw.text((text_x, y), phase_name, font=font, fill=(200, 200, 255))
+            # Row 1: Phase name (prominent)
+            draw.text((text_x, 2), phase_name, font=font, fill=(200, 200, 255))
             if moon_phase is not None:
                 pct = f"{int(moon_phase * 100)}%"
                 pct_w = draw.textlength(pct, font=font)
-                draw.text((width - pct_w - 2, y), pct, font=font, fill=(140, 140, 180))
-            y += font_h + 1
+                draw.text((width - pct_w - 2, 2), pct, font=font, fill=(140, 140, 180))
+
+            # Row 2: Sunrise / Sunset
+            y2 = 2 + font_h + 2
+            draw.text((text_x, y2), f"Rise {sunrise}", font=font_sm, fill=(255, 200, 0))
+            set_text = f"Set {sunset}"
+            set_w = draw.textlength(set_text, font=font_sm)
+            draw.text((width - set_w - 2, y2), set_text, font=font_sm, fill=(255, 120, 50))
+
+            # Row 3: Moonrise / Moonset
+            y3 = y2 + font_sm_h + 2
+            draw.text((text_x, y3), f"MR {moonrise}", font=font_sm, fill=(180, 180, 220))
+            ms_text = f"MS {moonset}"
+            ms_w = draw.textlength(ms_text, font=font_sm)
+            draw.text((width - ms_w - 2, y3), ms_text, font=font_sm, fill=(140, 140, 180))
 
             # Row 4: Day length
+            y4 = y3 + font_sm_h + 2
             if day_len:
-                dl_text = f"Day: {day_len}"
-                draw.text((text_x, y), dl_text, font=font, fill=self.COLORS['dim'])
+                draw.text((text_x, y4), f"Day {day_len}", font=font_sm, fill=self.COLORS['dim'])
 
             self.display_manager.image = img
             self.display_manager.update_display()
