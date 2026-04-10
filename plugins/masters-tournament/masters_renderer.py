@@ -81,6 +81,7 @@ FONT_SEARCH_DIRS = [
     "assets/fonts",
     "../../../assets/fonts",
     "../../assets/fonts",
+    str(Path(__file__).parent.parent.parent / "assets" / "fonts"),
     str(Path.home() / "Github" / "LEDMatrix" / "assets" / "fonts"),
 ]
 
@@ -150,6 +151,25 @@ _BDF_FONT_CACHE: Dict[str, Optional[ImageFont.ImageFont]] = {}
 # writes a .pil header + .pbm bitmap pair that ImageFont.load() then reads,
 # so those files need to exist on disk for the lifetime of the process.
 _BDF_TEMP_DIR: Optional[str] = None
+
+
+def _cleanup_bdf_temp() -> None:
+    """Remove the BDF temp directory on process exit."""
+    global _BDF_TEMP_DIR
+    if _BDF_TEMP_DIR is None:
+        return
+    try:
+        import shutil
+        shutil.rmtree(_BDF_TEMP_DIR)
+    except Exception as e:
+        logger.debug("Failed to remove BDF temp dir %s: %s", _BDF_TEMP_DIR, e)
+    finally:
+        _BDF_TEMP_DIR = None
+        _BDF_FONT_CACHE.clear()
+
+
+import atexit
+atexit.register(_cleanup_bdf_temp)
 
 
 def _load_bdf_font(filename: str) -> Optional[ImageFont.ImageFont]:
@@ -280,6 +300,19 @@ class MastersRenderer:
             flag_h = max(8, min(self.row_height + 1, 10))
             self.flag_size = (int(flag_h * 1.4), flag_h)
 
+        # Wide-short panels with very limited height (128x32, 256x32) need
+        # compact vertical sizing — the large-tier defaults consume too much
+        # of the 32px budget (header 11 + footer 6 + row 9 = 26 of 32).
+        if self.is_wide_short and self.height <= 32:
+            self.row_height = 7
+            self.header_height = 8
+            self.footer_height = 5
+            self.show_headshot = False
+            self.headshot_size = 0
+            self.show_country = False
+            flag_h = max(6, min(self.row_height, 7))
+            self.flag_size = (int(flag_h * 1.4), flag_h)
+
         # Compute max_players from actual available vertical space.
         available_h = self.height - self.header_height - self.footer_height - 2
         slot_h = self.row_height + self.row_gap
@@ -301,6 +334,11 @@ class MastersRenderer:
             self.font_body = _load_font("small")
             self.font_score = _load_font("medium")
             self.font_detail = _load_font("small")
+
+        # Wide-short 32px: PressStart2P at 8px is too tall for 8px header
+        if self.is_wide_short and self.height <= 32:
+            self.font_header = _load_font("small")
+            self.font_score = _load_font("small")
 
     # ═══════════════════════════════════════════════════════════
     # DRAWING HELPERS
@@ -1053,6 +1091,57 @@ class MastersRenderer:
     # FUN FACTS - Scrolling text
     # ═══════════════════════════════════════════════════════════
 
+    def _wrap_text(self, text: str, max_w: int,
+                   font, draw) -> List[str]:
+        """Word-wrap *text* to fit within *max_w* pixels using *font*.
+
+        Words wider than *max_w* are broken at character boundaries.
+        """
+        words = text.split()
+        lines: List[str] = []
+        current_line = ""
+        for word in words:
+            # Break oversized words into chunks that fit.
+            if self._text_width(draw, word, font) > max_w:
+                for ch in word:
+                    test = current_line + ch
+                    if self._text_width(draw, test, font) <= max_w:
+                        current_line = test
+                    else:
+                        if current_line:
+                            lines.append(current_line)
+                        current_line = ch
+                continue
+            test = f"{current_line} {word}".strip()
+            if self._text_width(draw, test, font) <= max_w:
+                current_line = test
+            else:
+                if current_line:
+                    lines.append(current_line)
+                current_line = word
+        if current_line:
+            lines.append(current_line)
+        return lines
+
+    def get_fun_fact_line_count(self, fact_index: int,
+                               card_width: Optional[int] = None,
+                               card_height: Optional[int] = None) -> tuple:
+        """Return (total_lines, visible_lines) for a fun fact at this display size."""
+        cw = card_width if card_width is not None else self.width
+        ch = card_height if card_height is not None else self.height
+
+        fact = get_fun_fact_by_index(fact_index)
+        tmp = Image.new("RGB", (1, 1))
+        draw = ImageDraw.Draw(tmp)
+
+        font = self.font_detail
+        line_h = self._text_height(draw, "Ag", font) + 2
+        content_top = self.header_height + 4
+
+        lines = self._wrap_text(fact, cw - 10, font, draw)
+        visible = max(1, (ch - content_top - 4) // line_h)
+        return len(lines), visible
+
     def render_fun_fact(self, fact_index: int = -1, scroll_offset: int = 0,
                         card_width: Optional[int] = None,
                         card_height: Optional[int] = None) -> Optional[Image.Image]:
@@ -1083,23 +1172,12 @@ class MastersRenderer:
         line_h = self._text_height(draw, "Ag", font) + 2  # Extra line spacing
         max_w = cw - 10  # More horizontal padding
 
-        words = fact.split()
-        lines = []
-        current_line = ""
-        for word in words:
-            test = f"{current_line} {word}".strip()
-            if self._text_width(draw, test, font) <= max_w:
-                current_line = test
-            else:
-                if current_line:
-                    lines.append(current_line)
-                current_line = word
-        if current_line:
-            lines.append(current_line)
+        lines = self._wrap_text(fact, max_w, font, draw)
+        total_lines = len(lines)
 
         # Apply scroll offset (for long facts)
         visible_lines = max(1, (ch - content_top - 4) // line_h)
-        if len(lines) > visible_lines:
+        if total_lines > visible_lines:
             start_line = scroll_offset % max(1, len(lines) - visible_lines + 1)
             lines = lines[start_line : start_line + visible_lines]
 
@@ -1110,12 +1188,55 @@ class MastersRenderer:
             y += line_h
 
         # Scroll indicator if text is long
-        if len(words) > visible_lines * 4:  # Rough heuristic
+        if total_lines > visible_lines:
             # Small down arrow
             ax = cw - 6
             ay = ch - 6
             draw.polygon([(ax - 2, ay - 2), (ax + 2, ay - 2), (ax, ay + 1)],
                          fill=COLORS["masters_yellow"])
+
+        return img
+
+    def render_fun_fact_vegas(self, fact_index: int = -1,
+                              card_height: int = 32) -> Optional[Image.Image]:
+        """Render a fun fact as a single-line wide card for vegas horizontal scroll.
+
+        The card is exactly as wide as needed to fit the full text on one
+        line below the header, so the vegas scroller reveals it naturally.
+        """
+        ch = card_height
+
+        if fact_index < 0:
+            fact = get_random_fun_fact()
+        else:
+            fact = get_fun_fact_by_index(fact_index)
+
+        font = self.font_detail
+        # Measure the full single-line text width
+        tmp = Image.new("RGB", (1, 1))
+        tmp_draw = ImageDraw.Draw(tmp)
+        title = "DID YOU KNOW?"
+        title_w = self._text_width(tmp_draw, title, self.font_header) + 8
+        text_w = self._text_width(tmp_draw, fact, font)
+        text_h = self._text_height(tmp_draw, "Ag", font)
+
+        # Card wide enough for header title or text, whichever is longer
+        cw = max(title_w, text_w + 10)
+
+        img = self._draw_gradient_bg(COLORS["bg"], COLORS["bg_dark_green"],
+                                     width=cw, height=ch)
+        draw = ImageDraw.Draw(img)
+
+        # Header
+        header_h = self.header_height
+        draw.rectangle([(0, 0), (cw - 1, header_h - 1)], fill=COLORS["masters_green"])
+        draw.line([(0, header_h - 1), (cw, header_h - 1)], fill=COLORS["masters_yellow"])
+        self._text_shadow(draw, (3, 1), title, self.font_header, COLORS["masters_yellow"])
+
+        # Single line of text, vertically centered in remaining space
+        content_top = header_h + 1
+        text_y = content_top + max(0, (ch - content_top - text_h) // 2)
+        draw.text((5, text_y), fact, fill=COLORS["white"], font=font)
 
         return img
 
@@ -1180,51 +1301,111 @@ class MastersRenderer:
 
         content_top = self.header_height + 2
         content_bottom = self.height - self.footer_height - 2
-        entry_h = (self.row_height + self.row_gap) * 2 + 2
-        rows = max(1, (content_bottom - content_top) // entry_h)
+        avail_h = content_bottom - content_top
 
         two_column = self.is_wide_short
         cols = 2 if two_column else 1
-        per_page = rows * cols
-
-        total_pages = max(1, (len(schedule_data) + per_page - 1) // per_page)
-        page = page % total_pages
-        start = page * per_page
-        entries = schedule_data[start : start + per_page]
-
         col_w = self.width // cols
-        if two_column:
-            draw.line([(col_w, content_top), (col_w, content_bottom)],
-                      fill=COLORS["masters_dark"])
 
         # Masters pairings are almost always threesomes; always build text
         # from the full list and let the width-clipping loop shorten it.
-        # Dropping the third golfer up front would hide half of who's in the
-        # group on wide-short layouts.
         name_budget = 10 if not two_column else 9
 
-        for i, entry in enumerate(entries):
-            col = i // rows
-            row = i % rows
-            cx = col * col_w + 3
-            cx_right = (col + 1) * col_w - 3
-            y = content_top + row * entry_h
+        if self.height >= 48:
+            # ── Standard layout: time on one line, each player stacked below ──
+            detail_h = self._text_height(draw, "Ag", self.font_detail) + 1
+            # Time row + up to 3 player rows + gap
+            player_rows = min(3, max(1, (avail_h - self.row_height - 1) // detail_h))
+            entry_h = self.row_height + 1 + player_rows * detail_h + 2
+            rows = max(1, avail_h // entry_h)
+            per_page = rows * cols
 
-            # Time in yellow
-            time_text = entry.get("time", "")
-            draw.text((cx, y), time_text,
-                      fill=COLORS["masters_yellow"], font=self.font_body)
-            y += self.row_height + 1
+            total_pages = max(1, (len(schedule_data) + per_page - 1) // per_page)
+            page = page % total_pages
+            entries = schedule_data[page * per_page : (page + 1) * per_page]
 
-            # Players — build from full list, clip to column width
-            players = entry.get("players", []) or []
-            players_text = ", ".join(
-                format_player_name(p, name_budget) for p in players
-            )
-            while players_text and self._text_width(draw, players_text, self.font_detail) > (cx_right - cx - 3):
-                players_text = players_text[:-1]
-            draw.text((cx + 3, y), players_text,
-                      fill=COLORS["white"], font=self.font_detail)
+            if two_column:
+                draw.line([(col_w, content_top), (col_w, content_bottom)],
+                          fill=COLORS["masters_dark"])
+
+            for i, entry in enumerate(entries):
+                col = i // rows
+                row = i % rows
+                cx = col * col_w + 3
+                cx_right = (col + 1) * col_w - 3
+                y = content_top + row * entry_h
+
+                time_text = entry.get("time", "")
+                draw.text((cx, y), time_text,
+                          fill=COLORS["masters_yellow"], font=self.font_body)
+                y += self.row_height + 1
+
+                players = entry.get("players", []) or []
+                max_name_w = cx_right - cx - 3
+                if len(players) <= player_rows:
+                    # All players fit on their own line
+                    for p in players:
+                        name = format_player_name(p, name_budget)
+                        while name and self._text_width(draw, name, self.font_detail) > max_name_w:
+                            name = name[:-1]
+                        draw.text((cx + 3, y), name,
+                                  fill=COLORS["white"], font=self.font_detail)
+                        y += detail_h
+                else:
+                    # More players than rows — show first (player_rows-1)
+                    # individually, fold the rest into the last line.
+                    solo = max(0, player_rows - 1)
+                    for p in players[:solo]:
+                        name = format_player_name(p, name_budget)
+                        while name and self._text_width(draw, name, self.font_detail) > max_name_w:
+                            name = name[:-1]
+                        draw.text((cx + 3, y), name,
+                                  fill=COLORS["white"], font=self.font_detail)
+                        y += detail_h
+                    # Last line: remaining players comma-separated
+                    overflow = ", ".join(
+                        format_player_name(p, name_budget) for p in players[solo:]
+                    )
+                    while overflow and self._text_width(draw, overflow, self.font_detail) > max_name_w:
+                        overflow = overflow[:-1]
+                    draw.text((cx + 3, y), overflow,
+                              fill=COLORS["white"], font=self.font_detail)
+                    y += detail_h
+        else:
+            # ── Compact layout (height < 48): tighter spacing ──
+            # Time + comma-separated players on adjacent lines with minimal gap
+            entry_h = self.row_height + self.row_gap + self.row_height
+            rows = max(1, avail_h // entry_h)
+            per_page = rows * cols
+
+            total_pages = max(1, (len(schedule_data) + per_page - 1) // per_page)
+            page = page % total_pages
+            entries = schedule_data[page * per_page : (page + 1) * per_page]
+
+            if two_column:
+                draw.line([(col_w, content_top), (col_w, content_bottom)],
+                          fill=COLORS["masters_dark"])
+
+            for i, entry in enumerate(entries):
+                col = i // rows
+                row = i % rows
+                cx = col * col_w + 3
+                cx_right = (col + 1) * col_w - 3
+                y = content_top + row * entry_h
+
+                time_text = entry.get("time", "")
+                draw.text((cx, y), time_text,
+                          fill=COLORS["masters_yellow"], font=self.font_detail)
+                y += self.row_height + self.row_gap
+
+                players = entry.get("players", []) or []
+                players_text = ", ".join(
+                    format_player_name(p, name_budget) for p in players
+                )
+                while players_text and self._text_width(draw, players_text, self.font_detail) > (cx_right - cx - 3):
+                    players_text = players_text[:-1]
+                draw.text((cx + 3, y), players_text,
+                          fill=COLORS["white"], font=self.font_detail)
 
         self._draw_page_dots(draw, page, total_pages)
         return img

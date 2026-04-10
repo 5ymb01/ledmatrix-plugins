@@ -124,7 +124,7 @@ class MastersTournamentPlugin(BasePlugin):
         self._last_hole_advance = {}  # per-mode hole timers
         self._hole_switch_interval = config.get("hole_display_duration", 15)
         self._last_fact_advance = 0
-        self._fact_advance_interval = 2  # seconds between scroll steps
+        self._fact_advance_interval = 3  # seconds between scroll steps
         self._last_page_advance = {}  # per-mode page timers
         self._page_interval = config.get("page_display_duration", 15)
 
@@ -508,8 +508,12 @@ class MastersTournamentPlugin(BasePlugin):
         if now - self._last_fact_advance >= self._fact_advance_interval:
             self._fact_scroll += 1
             self._last_fact_advance = now
-        # Move to next fact after scrolling through
-        if self._fact_scroll > 5:
+        # Derive scroll steps from actual wrapped line count for this fact.
+        total_lines, visible = self.renderer.get_fun_fact_line_count(
+            self._fact_index,
+        )
+        max_scroll = max(1, total_lines - visible + 1)
+        if self._fact_scroll >= max_scroll:
             self._fact_index += 1
             self._fact_scroll = 0
         return result
@@ -570,13 +574,18 @@ class MastersTournamentPlugin(BasePlugin):
             if card:
                 cards.append(card)
 
-        # Fun facts
-        for i in range(5):
-            card = self.renderer.render_fun_fact(
-                i, card_width=cw, card_height=ch,
-            )
-            if card:
-                cards.append(card)
+        # Fun facts — respect user's enabled setting.
+        # Use single-line wide cards so horizontal scroll reveals the full text.
+        fun_facts_enabled = self.config.get("display_modes", {}).get(
+            "fun_facts", {}
+        ).get("enabled", True)
+        if fun_facts_enabled:
+            for i in range(5):
+                card = self.renderer.render_fun_fact_vegas(
+                    i, card_height=ch,
+                )
+                if card:
+                    cards.append(card)
 
         return cards if cards else None
 
