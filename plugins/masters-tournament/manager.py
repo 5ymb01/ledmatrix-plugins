@@ -171,6 +171,10 @@ class MastersTournamentPlugin(BasePlugin):
 
     PHASE_MODES = {
         "off-season": [
+            # masters_countdown appears 3x out of 10 entries (~30% screen time)
+            # so it dominates the rotation after the post-tournament window closes.
+            "masters_countdown",
+            "masters_countdown",
             "masters_fun_facts",
             "masters_past_champions",
             "masters_course_tour",
