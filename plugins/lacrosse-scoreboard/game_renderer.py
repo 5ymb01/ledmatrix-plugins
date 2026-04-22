@@ -70,6 +70,7 @@ class GameRenderer:
         defaults = config.get('defaults', {})
         self.show_records = defaults.get('show_records', config.get('show_records', False))
         self.show_ranking = defaults.get('show_ranking', config.get('show_ranking', False))
+        self.show_odds = defaults.get('show_odds', config.get('show_odds', False))
 
         # Rankings cache (populated externally)
         self._team_rankings_cache: Dict[str, int] = {}
@@ -94,7 +95,7 @@ class GameRenderer:
             fonts["time"] = self._load_custom_font(period_config, default_size=8)
             fonts["team"] = self._load_custom_font(team_config, default_size=8)
             fonts["status"] = self._load_custom_font(status_config, default_size=6)
-            fonts["detail"] = self._load_custom_font(detail_config, default_size=6)
+            fonts["detail"] = self._load_custom_font(detail_config, default_size=6, default_font='4x6-font.ttf')
             fonts["rank"] = self._load_custom_font(rank_config, default_size=10)
             self.logger.debug("Successfully loaded fonts from config")
         except Exception:
@@ -114,9 +115,9 @@ class GameRenderer:
 
         return fonts
 
-    def _load_custom_font(self, element_config: Dict[str, Any], default_size: int = 8) -> ImageFont.FreeTypeFont:
+    def _load_custom_font(self, element_config: Dict[str, Any], default_size: int = 8, default_font: str = 'PressStart2P-Regular.ttf') -> ImageFont.FreeTypeFont:
         """Load a custom font from an element configuration dictionary."""
-        font_name = element_config.get('font', 'PressStart2P-Regular.ttf')
+        font_name = element_config.get('font', default_font)
         font_size = int(element_config.get('font_size', default_size))
         font_path = os.path.join('assets', 'fonts', font_name)
 
@@ -396,13 +397,6 @@ class GameRenderer:
             score_x = (self.display_width - score_width) // 2
             score_y = (self.display_height // 2) - 3
             self._draw_text_with_outline(draw_overlay, score_text, (score_x, score_y), self.fonts['score'])
-        elif game_type == "upcoming":
-            # Draw "VS" for upcoming games
-            vs_text = "VS"
-            vs_width = draw_overlay.textlength(vs_text, font=self.fonts['score'])
-            vs_x = (self.display_width - vs_width) // 2
-            vs_y = (self.display_height // 2) - 3
-            self._draw_text_with_outline(draw_overlay, vs_text, (vs_x, vs_y), self.fonts['score'])
 
         # Draw period/status based on game type
         if game_type == "live":
@@ -411,6 +405,10 @@ class GameRenderer:
             self._draw_recent_game_status(draw_overlay, game)
         elif game_type == "upcoming":
             self._draw_upcoming_game_status(draw_overlay, game)
+
+        # Draw odds if enabled and available
+        if self.show_odds and game.get('odds'):
+            self._draw_dynamic_odds(draw_overlay, game['odds'], self.display_width, self.display_height)
 
         # Draw records or rankings if enabled
         if self.show_records or self.show_ranking:
@@ -438,9 +436,16 @@ class GameRenderer:
         state = status.get('state', '')
 
         if state == 'in':
-            period_clock_text = f"P{period} {clock}".strip()
+            if period == 0:
+                period_clock_text = f"Start {clock}".strip()
+            elif 1 <= period <= 4:
+                period_clock_text = f"Q{period} {clock}".strip()
+            elif period > 4:
+                period_clock_text = f"OT{period - 4} {clock}".strip()
+            else:
+                period_clock_text = clock
         elif state == 'post':
-            period_clock_text = "Final"
+            period_clock_text = "Final/OT" if period > 4 else "Final"
         else:
             period_clock_text = status.get('short_detail', '')
 
@@ -464,47 +469,103 @@ class GameRenderer:
             shots_x = (self.display_width - shots_width) // 2
             self._draw_text_with_outline(draw, shots_text, (shots_x, shots_y), shots_font)
 
-    def _draw_recent_game_status(self, draw: ImageDraw.Draw, _game: Dict) -> None:
-        """Draw status elements for a recently completed game.
-
-        Note: _game parameter reserved for future enhancements (e.g., OT indicator).
-        """
-        # Final status (Top center)
-        status_text = "Final"
+    def _draw_recent_game_status(self, draw: ImageDraw.Draw, game: Dict) -> None:
+        """Draw status elements for a recently completed game."""
+        # Show "Final/OT" when the game ended in overtime (period > 4)
+        period = game.get('status', {}).get('period', 0)
+        status_text = "Final/OT" if period > 4 else "Final"
         status_width = draw.textlength(status_text, font=self.fonts['time'])
         status_x = (self.display_width - status_width) // 2
         status_y = 1
         self._draw_text_with_outline(draw, status_text, (status_x, status_y), self.fonts['time'])
 
     def _draw_upcoming_game_status(self, draw: ImageDraw.Draw, game: Dict) -> None:
-        """Draw status elements for an upcoming game."""
-        # Get game time from status
-        status = game.get('status', {})
-        game_time = status.get('short_detail', '')
+        """Draw status elements for an upcoming game.
+
+        Matches the direct display path: "Next Game" label at top, then stacked
+        date and time centered on the card — no "VS" text.
+        """
+        game_date = game.get("game_date", "")
+        game_time = game.get("game_time", "")
+
+        # "Next Game" label at top — smaller font on narrow displays
+        status_font = self.fonts['status'] if self.display_width <= 128 else self.fonts['time']
+        label = "Next Game"
+        label_w = draw.textlength(label, font=status_font)
+        self._draw_text_with_outline(draw, label, ((self.display_width - label_w) // 2, 1), status_font)
+
+        # Stacked date / time centered vertically
+        center_y = self.display_height // 2
+        date_y = center_y - 7
+
+        if game_date:
+            date_w = draw.textlength(game_date, font=self.fonts['time'])
+            self._draw_text_with_outline(draw, game_date, ((self.display_width - date_w) // 2, date_y), self.fonts['time'])
 
         if game_time:
-            time_width = draw.textlength(game_time, font=self.fonts['time'])
-            time_x = (self.display_width - time_width) // 2
-            time_y = 1
-            self._draw_text_with_outline(draw, game_time, (time_x, time_y), self.fonts['time'])
-        else:
-            # Fallback: try to parse start_time
-            start_time = game.get("start_time", "")
-            if start_time:
-                try:
-                    from datetime import datetime, timezone
+            time_w = draw.textlength(game_time, font=self.fonts['time'])
+            self._draw_text_with_outline(draw, game_time, ((self.display_width - time_w) // 2, date_y + 9), self.fonts['time'])
 
-                    dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-                    local_dt = dt.astimezone(timezone.utc)  # Use UTC for now
+    def _draw_dynamic_odds(
+        self,
+        draw: ImageDraw.Draw,
+        odds: Dict[str, Any],
+        width: int,
+        height: int,
+    ) -> None:
+        """Draw odds with dynamic positioning — spread on favored team's side, O/U on opposite."""
+        try:
+            if not odds or any(callable(v) for v in odds.values()):
+                return
 
-                    game_date = local_dt.strftime("%b %d")
+            home_team_odds = odds.get("home_team_odds", {})
+            away_team_odds = odds.get("away_team_odds", {})
+            home_spread = home_team_odds.get("spread_odds")
+            away_spread = away_team_odds.get("spread_odds")
 
-                    date_width = draw.textlength(game_date, font=self.fonts['time'])
-                    date_x = (self.display_width - date_width) // 2
-                    date_y = 1
-                    self._draw_text_with_outline(draw, game_date, (date_x, date_y), self.fonts['time'])
-                except (ValueError, TypeError) as e:
-                    self.logger.debug(f"Failed to parse start_time '{start_time}': {e}")
+            top_level_spread = odds.get("spread")
+            if top_level_spread is not None:
+                if home_spread is None or home_spread == 0.0:
+                    home_spread = top_level_spread
+                if away_spread is None:
+                    away_spread = -top_level_spread
+
+            home_favored = isinstance(home_spread, (int, float)) and home_spread < 0
+            away_favored = isinstance(away_spread, (int, float)) and away_spread < 0
+
+            favored_spread = None
+            favored_side = None
+            if home_favored:
+                favored_spread = home_spread
+                favored_side = "home"
+            elif away_favored:
+                favored_spread = away_spread
+                favored_side = "away"
+
+            font = self.fonts["detail"]
+
+            if favored_spread is not None:
+                spread_text = str(favored_spread)
+                if favored_side == "home":
+                    spread_x = width - int(draw.textlength(spread_text, font=font))
+                else:
+                    spread_x = 0
+                self._draw_text_with_outline(draw, spread_text, (spread_x, 0), font, fill=(0, 255, 0))
+
+            over_under = odds.get("over_under")
+            if over_under is not None and isinstance(over_under, (int, float)):
+                ou_text = f"O/U: {over_under}"
+                ou_width = int(draw.textlength(ou_text, font=font))
+                if favored_side == "home":
+                    ou_x = 0
+                elif favored_side == "away":
+                    ou_x = width - ou_width
+                else:
+                    ou_x = (width - ou_width) // 2
+                self._draw_text_with_outline(draw, ou_text, (ou_x, 0), font, fill=(0, 255, 0))
+
+        except Exception as e:
+            self.logger.warning(f"Error drawing odds: {e} | odds={repr(odds)[:120]}")
 
     def _draw_records_or_rankings(self, draw: ImageDraw.Draw, game: Dict) -> None:
         """Draw team records or rankings."""
@@ -526,7 +587,7 @@ class GameRenderer:
 
         record_bbox = draw.textbbox((0, 0), "0-0", font=record_font)
         record_height = record_bbox[3] - record_bbox[1]
-        record_y = self.display_height - record_height - 4
+        record_y = self.display_height - record_height
 
         # Away team info
         if away_abbr:

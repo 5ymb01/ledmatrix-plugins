@@ -5,9 +5,19 @@ This plugin provides NCAA Men's and NCAA Women's lacrosse scoreboard functionali
 the proven, working manager classes adapted from the lacrosse scoreboard plugin.
 """
 
+import json
 import logging
 import time
+from pathlib import Path
 from typing import Dict, Any, Optional, Set, List, Tuple
+
+# Read version once at import time so get_info() never drifts from manifest.json
+try:
+    _MANIFEST_VERSION = json.loads(
+        (Path(__file__).parent / "manifest.json").read_text()
+    ).get("version", "unknown")
+except Exception:
+    _MANIFEST_VERSION = "unknown"
 
 try:
     from src.plugin_system.base_plugin import BasePlugin, VegasDisplayMode
@@ -110,7 +120,7 @@ class LacrosseScoreboardPlugin(BasePlugin if BasePlugin else object):
         # Global settings - read from defaults section with fallback
         defaults = config.get("defaults", {})
         self.display_duration = float(defaults.get("display_duration", config.get("display_duration", 30)))
-        self.game_display_duration = float(defaults.get("display_duration", config.get("game_display_duration", 15)))
+        self.game_display_duration = float(defaults.get("game_display_duration", config.get("game_display_duration", 15)))
 
         # Additional settings - read from defaults section with fallback
         self.show_records = defaults.get("show_records", config.get("show_records", False))
@@ -127,31 +137,7 @@ class LacrosseScoreboardPlugin(BasePlugin if BasePlugin else object):
             except Exception as e:
                 self.logger.warning(f"Could not initialize background service: {e}")
         
-        # Initialize scroll display manager if available
-        self._scroll_manager: Optional[ScrollDisplayManager] = None
-        if SCROLL_AVAILABLE and ScrollDisplayManager:
-            try:
-                self._scroll_manager = ScrollDisplayManager(
-                    self.display_manager,
-                    self.config,
-                    self.logger
-                )
-                self.logger.info("Scroll display manager initialized")
-            except Exception as e:
-                self.logger.warning(f"Could not initialize scroll display manager: {e}")
-                self._scroll_manager = None
-        else:
-            self.logger.debug("Scroll mode not available - ScrollDisplayManager not imported")
-        
-        # Track current scroll state
-        self._scroll_active: Dict[str, bool] = {}  # {game_type: is_active}
-        self._scroll_prepared: Dict[str, bool] = {}  # {game_type: is_prepared}
-        
-        # Enable high-FPS mode for scroll display (allows 100+ FPS scrolling)
-        # This signals to the display controller to use high-FPS loop (8ms = 125 FPS)
-        self.enable_scrolling = self._scroll_manager is not None
-        if self.enable_scrolling:
-            self.logger.info("High-FPS scrolling enabled for lacrosse scoreboard")
+        # Scroll display manager initialized later after all config is parsed
 
         # League registry: maps league IDs to their configuration and managers
         # This structure makes it easy to add more leagues in the future
@@ -2749,7 +2735,7 @@ class LacrosseScoreboardPlugin(BasePlugin if BasePlugin else object):
             info = {
                 "plugin_id": self.plugin_id,
                 "name": "Lacrosse Scoreboard",
-                "version": "1.0.1",
+                "version": _MANIFEST_VERSION,
                 "enabled": self.is_enabled,
                 "display_size": f"{self.display_width}x{self.display_height}",
                 "ncaa_mens_enabled": self.ncaa_mens_enabled,
